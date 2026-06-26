@@ -1,0 +1,52 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: lb://auth
+          predicates:
+            - Path=/auth/**
+
+        - id: user
+          uri: lb://user
+          predicates:
+            - Path=/users/**,/demandes/**
+
+        - id: logement
+          uri: lb://logement
+          predicates:
+            - Path=/logements/**
+
+        - id: reservation
+          uri: lb://reservation
+          predicates:
+            - Path=/reservations/**
+
+        - id: paiement
+          uri: lb://paiement
+          predicates:
+            - Path=/paiements/**,/abonnements/**,/reversements/**,/webhooks/**
+
+        - id: messagerie
+          uri: lb://messagerie
+          predicates:
+            - Path=/messages/**
+
+        - id: admin
+          uri: lb://admin
+          predicates:
+            - Path=/admin/**
+
+  main:
+    web-application-type: reactive
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
