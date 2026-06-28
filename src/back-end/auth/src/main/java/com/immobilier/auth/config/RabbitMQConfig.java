@@ -11,16 +11,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // Noms des exchanges
+    // Exchange
     public static final String AUTH_EXCHANGE = "auth.exchange";
 
-    // Noms des queues
-    public static final String USER_REGISTERED_QUEUE = "auth.user.registered";
-    public static final String USER_LOGGED_IN_QUEUE = "auth.user.loggedin";
-
     // Routing keys
-    public static final String USER_REGISTERED_KEY = "auth.user.registered";
-    public static final String USER_LOGGED_IN_KEY = "auth.user.loggedin";
+    public static final String USER_REGISTERED_KEY   = "auth.user.registered";
+    public static final String USER_LOGGED_IN_KEY    = "auth.user.loggedin";
+    public static final String USER_ROLE_CHANGED_KEY = "auth.user.role.changed";
+
+    // Queue names
+    public static final String USER_REGISTERED_QUEUE   = "auth.user.registered";
+    public static final String USER_LOGGED_IN_QUEUE    = "auth.user.loggedin";
+    public static final String USER_ROLE_CHANGED_QUEUE = "auth.user.role.changed";
 
     // Exchange
     @Bean
@@ -37,6 +39,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue userLoggedInQueue() {
         return QueueBuilder.durable(USER_LOGGED_IN_QUEUE).build();
+    }
+
+    @Bean
+    public Queue userRoleChangedQueue() {
+        return QueueBuilder.durable(USER_ROLE_CHANGED_QUEUE).build();
     }
 
     // Bindings
@@ -56,13 +63,21 @@ public class RabbitMQConfig {
                 .with(USER_LOGGED_IN_KEY);
     }
 
+    @Bean
+    public Binding userRoleChangedBinding() {
+        return BindingBuilder
+                .bind(userRoleChangedQueue())
+                .to(authExchange())
+                .with(USER_ROLE_CHANGED_KEY);
+    }
+
     // Convertisseur JSON
     @Bean
     public MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-    // Template avec convertisseur JSON
+    // Template
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);

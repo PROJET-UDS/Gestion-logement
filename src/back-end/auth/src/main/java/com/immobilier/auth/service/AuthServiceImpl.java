@@ -8,9 +8,10 @@ import com.immobilier.auth.security.JwtService;
 import com.immobilier.shared.enums.UserRole;
 import com.immobilier.shared.events.UserRegisteredEvent;
 import com.immobilier.shared.dto.JwtClaims;
+import com.immobilier.auth.config.RabbitMQConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthUserRepository authUserRepository;
     private final JwtService          jwtService;
     private final PasswordEncoder     passwordEncoder;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final RabbitTemplate      rabbitTemplate;
 
     @Override
     @Transactional
@@ -40,15 +41,20 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         authUserRepository.save(user);
-        log.info("Nouvel utilisateur enregistrÃ© : {}", user.getEmail());
+        log.info("Nouvel utilisateur enregistré : {}", user.getEmail());
 
-        kafkaTemplate.send(UserRegisteredEvent.TOPIC,
-                UserRegisteredEvent.builder()
-                        .userId(user.getId())
-                        .email(user.getEmail())
-                        .role(user.getRole().name())
-                        .occurredAt(Instant.now())
-                        .build());
+        UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .occurredAt(Instant.now())
+                .build();
+        
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.USER_REGISTERED_KEY,
+                event
+        );
 
         return buildTokenResponse(user);
     }

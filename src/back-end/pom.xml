@@ -18,7 +18,6 @@
     <module>reservation</module>
     <module>paiement</module>
     <module>messagerie</module>
-    <module>admin</module>
     <module>gateway</module>
     <module>discover</module>
   </modules>

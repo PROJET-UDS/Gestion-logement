@@ -1,6 +1,6 @@
 package com.immobilier.auth.entity;
 
-import com.immobilier.shared.exceptions.GatewayException;
+import com.immobilier.shared.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;

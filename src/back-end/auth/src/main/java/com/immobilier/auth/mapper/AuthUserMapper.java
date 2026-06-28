@@ -10,7 +10,7 @@ public interface AuthUserMapper {
     @Mapping(target = "accessToken",  ignore = true)
     @Mapping(target = "refreshToken", ignore = true)
     @Mapping(target = "tokenType",    constant = "Bearer")
-    @Mapping(target = "expiresIn",    constant = "900L")
+    @Mapping(target = "expiresIn",    expression = "java(900L)")
     @Mapping(target = "role",         expression = "java(user.getRole().name())")
     TokenResponseDTO toTokenResponse(AuthUser user);
 }
