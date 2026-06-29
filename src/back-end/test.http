@@ -1,0 +1,11 @@
+### Tester l'inscription (POST)
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "franc",
+    "password": "monMotDePasseSecurise"
+}
+
+### Tester une récupération (GET)
+GET http://localhost:8081/api/auth/users

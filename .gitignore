@@ -1,0 +1,64 @@
+#############################
+# BACKEND - Spring Boot (Maven)
+#############################
+
+target/
+*.log
+*.class
+*.jar
+*.war
+*.iml
+# !src/main/resources/**/application*.yml
+# !src/main/resources/**/application*.properties
+
+#############################
+# FRONTEND - Angular
+#############################
+
+# Angular build output
+dist/
+out-tsc/
+.angular/
+node_modules/
+
+# Angular environment files
+src/environments/environment*.ts
+
+#############################
+# IDEs & Editors
+#############################
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VSCode
+.vscode/
+
+#############################
+# System files
+#############################
+
+.DS_Store
+Thumbs.db
+
+#############################
+# Environment & config
+#############################
+
+.env
+.env.local
+.env.*.local
+
+############################
+# Others
+############################
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+pnpm-lock.yaml
+
