@@ -1,0 +1,214 @@
+version: '3.8'
+
+services:
+
+  # Base de données partagée (une instance PostgreSQL, plusieurs bases)
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: immobilier
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - immobilier-net
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: immobilier
+      RABBITMQ_DEFAULT_PASS: secret
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - immobilier-net
+
+  # Eureka
+  discover:
+    build: ./src/back-end/discover
+    container_name: discover
+    ports:
+      - "8761:8761"
+    networks:
+      - immobilier-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth
+  auth:
+    build: ./src/back-end/auth
+    container_name: auth
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/auth_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # Gateway
+  gateway:
+    build: ./src/back-end/gateway
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # User
+  user:
+    build: ./src/back-end/user
+    container_name: user
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/user_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # Logement
+  logement:
+    build: ./src/back-end/logement
+    container_name: logement
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/logement_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # reservation
+  reservation:
+    build: ./src/back-end/reservation
+    container_name: reservation
+    ports:
+      - "8084:8084"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/reservation_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # Paiement
+  paiement:
+    build: ./src/back-end/paiement
+    container_name: paiement
+    ports:
+      - "8085:8085"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/paiement_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+  # Messagerie
+  messagerie:
+    build: ./src/back-end/messagerie
+    container_name: messagerie
+    ports:
+      - "8086:8086"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/messagerie_db
+      DB_USERNAME: immobilier
+      DB_PASSWORD: secret
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: immobilier
+      RABBITMQ_PASSWORD: secret
+      EUREKA_URL: http://discover:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      discover:
+        condition: service_healthy
+    networks:
+      - immobilier-net
+
+networks:
+  immobilier-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
