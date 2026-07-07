@@ -1,0 +1,14 @@
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\constants\package-info.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\dto\JwtClaims.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\enums\PlanAbonnement.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\enums\StatutPaiement.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\enums\StatutReservation.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\enums\TypeTransaction.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\enums\UserRole.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\events\AbonnementActiveEvent.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\events\PaiementConfirmeEvent.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\events\ReservationConfirmeeEvent.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\events\UserRegisteredEvent.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\events\UserRoleChangedEvent.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\exceptions\GatewayException.java
+C:\Users\franc\OneDrive\Bureau\Projet_Uds\src\back-end\shared-lib\src\main\java\com\immobilier\shared\utils\package-info.java
