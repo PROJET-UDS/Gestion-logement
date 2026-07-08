@@ -17,6 +17,8 @@ function Profile() {
   const [telephone, setTelephone] = useState("");
   const [message, setMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [photo, setPhoto] = useState(burceMars);
+  const [photoFile, setPhotoFile] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -30,6 +32,7 @@ function Profile() {
           setNom(data.nom || "");
           setEmail(data.email || "");
           setTelephone(data.telephone || "");
+          if (data.photoUrl) setPhoto(data.photoUrl);
         }
       } catch (err) {
         console.log("Impossible de charger le profil pour le moment");
@@ -38,10 +41,20 @@ function Profile() {
     fetchProfile();
   }, []);
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhoto(URL.createObjectURL(file));
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
+
+      // 1. Mettre à jour les infos texte
       const response = await fetch("http://localhost:8082/api/users/me", {
         method: "PUT",
         headers: {
@@ -50,6 +63,18 @@ function Profile() {
         },
         body: JSON.stringify({ nom, email, telephone }),
       });
+
+      // 2. Si une nouvelle photo a été choisie, l'envoyer séparément
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("photo", photoFile);
+        await fetch("http://localhost:8082/api/users/me/photo", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+      }
+
       if (response.ok) {
         setMessage("Profil mis à jour avec succès !");
         setIsEditing(false);
@@ -71,7 +96,37 @@ function Profile() {
             <Card>
               <MDBox p={3}>
                 <MDBox display="flex" alignItems="center" mb={3}>
-                  <MDAvatar src={burceMars} alt="profile-image" size="xl" shadow="sm" />
+                  <MDBox position="relative">
+                    <MDAvatar src={photo} alt="profile-image" size="xl" shadow="sm" />
+                    {isEditing && (
+                      <MDBox
+                        component="label"
+                        htmlFor="photo-upload"
+                        position="absolute"
+                        bottom={0}
+                        right={0}
+                        bgColor="info"
+                        borderRadius="50%"
+                        width="28px"
+                        height="28px"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <MDTypography variant="button" color="white" fontSize="14px">
+                          ✎
+                        </MDTypography>
+                        <input
+                          id="photo-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoChange}
+                          style={{ display: "none" }}
+                        />
+                      </MDBox>
+                    )}
+                  </MDBox>
                   <MDBox ml={2} lineHeight={0}>
                     <MDTypography variant="h5" fontWeight="medium">
                       {nom || "Mon Profil"}
