@@ -31,6 +31,18 @@ export default function App() {
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
 
+  // Pages où le menu latéral (sidebar) ne doit PAS s'afficher
+  const noSidebarRoutes = [
+    "/",
+    "/authentification/sign-in",
+    "/authentification/sign-up",
+    "/authentification/reset-password",
+    "/authentication/sign-in",
+    "/authentication/sign-up",
+    "/authentication/reset-password",
+  ];
+  const showSidenav = !noSidebarRoutes.includes(pathname);
+
   useMemo(() => {
     const cacheRtl = createCache({
       key: "rtl",
@@ -66,12 +78,7 @@ export default function App() {
         return getRoutes(route.collapse);
       }
       if (route.route) {
-        if (
-          route.route === "/authentification/sign-in" ||
-          route.route === "/authentification/sign-up" ||
-          route.route === "/authentification/reset-password" ||
-          route.route === "/"
-        ) {
+        if (noSidebarRoutes.includes(route.route)) {
           return <Route exact path={route.route} element={route.component} key={route.key} />;
         }
         return (
@@ -86,15 +93,13 @@ export default function App() {
       return null;
     });
 
-  const configsButton = (
-    <></>
-  );
+  const configsButton = <></>;
 
   return direction === "rtl" ? (
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={themeRTL}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        {layout === "dashboard" && showSidenav && (
           <>
             <Sidenav
               color={sidenavColor}
@@ -117,7 +122,7 @@ export default function App() {
   ) : (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {layout === "dashboard" && (
+      {layout === "dashboard" && showSidenav && (
         <>
           <Sidenav
             color={sidenavColor}
