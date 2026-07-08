@@ -20,6 +20,13 @@ function Profile() {
   const [photo, setPhoto] = useState(burceMars);
   const [photoFile, setPhotoFile] = useState(null);
 
+  // Champs pour le changement de mot de passe
+  const [ancienMotDePasse, setAncienMotDePasse] = useState("");
+  const [nouveauMotDePasse, setNouveauMotDePasse] = useState("");
+  const [confirmerMotDePasse, setConfirmerMotDePasse] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -54,7 +61,6 @@ function Profile() {
     try {
       const token = localStorage.getItem("token");
 
-      // 1. Mettre à jour les infos texte
       const response = await fetch("http://localhost:8082/api/users/me", {
         method: "PUT",
         headers: {
@@ -64,7 +70,6 @@ function Profile() {
         body: JSON.stringify({ nom, email, telephone }),
       });
 
-      // 2. Si une nouvelle photo a été choisie, l'envoyer séparément
       if (photoFile) {
         const formData = new FormData();
         formData.append("photo", photoFile);
@@ -86,12 +91,54 @@ function Profile() {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordMessage("");
+
+    if (nouveauMotDePasse !== confirmerMotDePasse) {
+      setPasswordError("Les mots de passe ne correspondent pas");
+      return;
+    }
+    if (nouveauMotDePasse.length < 6) {
+      setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8082/api/users/me/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ancienMotDePasse,
+          nouveauMotDePasse,
+        }),
+      });
+
+      if (response.ok) {
+        setPasswordMessage("Mot de passe changé avec succès !");
+        setAncienMotDePasse("");
+        setNouveauMotDePasse("");
+        setConfirmerMotDePasse("");
+      } else {
+        setPasswordError("Ancien mot de passe incorrect");
+      }
+    } catch (err) {
+      setPasswordError("Erreur de connexion au serveur");
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox mb={2} />
       <MDBox mb={3}>
         <Grid container spacing={3}>
+          {/* Carte Informations personnelles */}
           <Grid item xs={12}>
             <Card>
               <MDBox p={3}>
@@ -192,6 +239,65 @@ function Profile() {
                         Enregistrer
                       </MDButton>
                     )}
+                  </MDBox>
+                </MDBox>
+              </MDBox>
+            </Card>
+          </Grid>
+
+          {/* Carte Changer le mot de passe */}
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
+                <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                  Changer le mot de passe
+                </MDTypography>
+                <MDBox component="form" role="form" onSubmit={handleChangePassword}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Mot de passe actuel"
+                        fullWidth
+                        value={ancienMotDePasse}
+                        onChange={(e) => setAncienMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Nouveau mot de passe"
+                        fullWidth
+                        value={nouveauMotDePasse}
+                        onChange={(e) => setNouveauMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Confirmer le mot de passe"
+                        fullWidth
+                        value={confirmerMotDePasse}
+                        onChange={(e) => setConfirmerMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {passwordMessage && (
+                    <MDTypography variant="caption" color="success" mt={2} display="block">
+                      {passwordMessage}
+                    </MDTypography>
+                  )}
+                  {passwordError && (
+                    <MDTypography variant="caption" color="error" mt={2} display="block">
+                      {passwordError}
+                    </MDTypography>
+                  )}
+
+                  <MDBox mt={3}>
+                    <MDButton variant="gradient" color="info" type="submit">
+                      Changer le mot de passe
+                    </MDButton>
                   </MDBox>
                 </MDBox>
               </MDBox>
