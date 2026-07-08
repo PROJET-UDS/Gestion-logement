@@ -1,5 +1,6 @@
 import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
+import UserDetail from "layouts/userdetail";
 import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
@@ -83,6 +84,11 @@ const routes = [
     icon: <Icon fontSize="small">lock_reset</Icon>,
     route: "/authentification/reset-password",
     component: <ResetPassword />,
+  },
+  {
+    route: "/tables/:id",
+    key: "user-detail",
+    component: <UserDetail />,
   },
   {
     type: "collapse",
