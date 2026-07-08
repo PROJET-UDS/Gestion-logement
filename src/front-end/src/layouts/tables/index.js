@@ -10,6 +10,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import MDAvatar from "components/MDAvatar";
+import MDInput from "components/MDInput";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
@@ -18,6 +19,7 @@ import burceMars from "assets/images/bruce-mars.jpg";
 
 function Tables() {
   const [utilisateurs, setUtilisateurs] = useState([]);
+  const [recherche, setRecherche] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -59,6 +61,15 @@ function Tables() {
     }
   };
 
+  // Filtrer les utilisateurs selon la recherche (nom ou email)
+  const utilisateursFiltres = utilisateurs.filter((user) => {
+    const texteRecherche = recherche.toLowerCase();
+    return (
+      user.nom?.toLowerCase().includes(texteRecherche) ||
+      user.email?.toLowerCase().includes(texteRecherche)
+    );
+  });
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -73,12 +84,26 @@ function Tables() {
             bgColor="info"
             borderRadius="lg"
             coloredShadow="info"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
           >
             <MDTypography variant="h6" color="white">
               Liste des Utilisateurs
             </MDTypography>
           </MDBox>
+
           <MDBox pt={3} px={2}>
+            <MDBox mb={2} maxWidth="300px">
+              <MDInput
+                type="text"
+                label="Rechercher par nom ou email"
+                fullWidth
+                value={recherche}
+                onChange={(e) => setRecherche(e.target.value)}
+              />
+            </MDBox>
+
             {message && (
               <MDTypography variant="caption" color="error" mb={2} display="block">
                 {message}
@@ -97,16 +122,16 @@ function Tables() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {utilisateurs.length === 0 && (
+                  {utilisateursFiltres.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} align="center">
                         <MDTypography variant="button" color="text">
-                          Aucun utilisateur trouvé pour le moment
+                          Aucun utilisateur trouvé
                         </MDTypography>
                       </TableCell>
                     </TableRow>
                   )}
-                  {utilisateurs.map((user) => (
+                  {utilisateursFiltres.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <MDAvatar src={user.photoUrl || burceMars} size="sm" />
