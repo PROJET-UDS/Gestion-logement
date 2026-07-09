@@ -20,6 +20,8 @@ dist/
 out-tsc/
 .angular/
 node_modules/
+target/
+**/target/
 
 # Angular environment files
 src/environments/environment*.ts

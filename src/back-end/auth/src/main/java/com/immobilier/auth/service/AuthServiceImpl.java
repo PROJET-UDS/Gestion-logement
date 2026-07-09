@@ -33,10 +33,12 @@ public class AuthServiceImpl implements AuthService {
         if (authUserRepository.existsByEmail(request.getEmail()))
             throw new UserAlreadyExistsException(request.getEmail());
 
+        UserRole role = resolveRegisterRole(request.getRole());
+
         AuthUser user = AuthUser.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.CLIENT)
+                .role(role)
                 .actif(true)
                 .build();
 
@@ -76,10 +78,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenResponseDTO refresh(RefreshRequestDTO request) {
-        if (!jwtService.isValid(request.getRefreshToken()))
+        if (!jwtService.isRefreshTokenValid(request.getRefreshToken()))
             throw new AuthException("Refresh token invalide ou expirÃ©");
 
-        JwtClaims claims = jwtService.validateAndExtract(request.getRefreshToken());
+        JwtClaims claims = jwtService.validateAndExtractRefreshToken(request.getRefreshToken());
         AuthUser user = authUserRepository.findById(claims.getUserId())
                 .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
 
@@ -88,9 +90,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtClaims validate(ValidateTokenRequestDTO request) {
-        if (!jwtService.isValid(request.getToken()))
+        if (!jwtService.isAccessTokenValid(request.getToken()))
             throw new AuthException("Token invalide ou expirÃ©");
-        return jwtService.validateAndExtract(request.getToken());
+        return jwtService.validateAndExtractAccessToken(request.getToken());
+    }
+
+    private UserRole resolveRegisterRole(UserRole requestedRole) {
+        if (requestedRole == null)
+            return UserRole.CLIENT;
+        if (requestedRole == UserRole.CLIENT || requestedRole == UserRole.PROPRIETAIRE)
+            return requestedRole;
+        throw new AuthException("Role non autorise pour l'inscription");
     }
 
     private TokenResponseDTO buildTokenResponse(AuthUser user) {

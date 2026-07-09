@@ -5,31 +5,29 @@ spring:
   application:
     name: logement
   config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+    import: "optional:configserver:"
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/logement_db
+    username: postgres
+    password: f
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     properties:
-      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.xml
+      hibernate.format_sql: true
+    show-sql: true
   rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USERNAME}
-    password: ${RABBITMQ_PASSWORD}
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
 eureka:
   client:
-    service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
-  instance:
-    prefer-ip-address: true
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 management:
   endpoints:
@@ -41,4 +39,13 @@ management:
       show-details: always
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: mon-secret-jwt-256-bits-minimum-dschang-2026-francko
+
+# --- CONFIGURATION SWAGGER
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

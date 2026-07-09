@@ -24,6 +24,7 @@ public class AuthUser {
     private UserRole role;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean actif = true;
 
     private Instant createdAt;

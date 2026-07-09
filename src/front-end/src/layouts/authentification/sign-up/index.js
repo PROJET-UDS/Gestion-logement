@@ -1,35 +1,40 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "@mui/material/Card";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentification/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import { getDefaultRouteForRole, register, saveAuthSession } from "services/authService";
 
 function SignUp() {
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("CLIENT");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const response = await fetch("http://localhost:8081/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom, email, password }),
-      });
-      if (response.ok) {
-        navigate("/authentification/sign-in");
-      } else {
-        setError("Erreur lors de l'inscription");
-      }
+      const data = await register({ nom, email, password, role });
+      const session = saveAuthSession(data);
+      navigate(getDefaultRouteForRole(session.role), { replace: true });
     } catch (err) {
-      setError("Erreur de connexion au serveur");
+      setError(err.message || "Erreur lors de l'inscription");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,14 +85,28 @@ function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </MDBox>
+            <MDBox mb={2}>
+              <FormControl fullWidth>
+                <InputLabel id="register-role-label">Type de compte</InputLabel>
+                <Select
+                  labelId="register-role-label"
+                  value={role}
+                  label="Type de compte"
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <MenuItem value="CLIENT">Client</MenuItem>
+                  <MenuItem value="PROPRIETAIRE">Propriétaire</MenuItem>
+                </Select>
+              </FormControl>
+            </MDBox>
             {error && (
               <MDTypography variant="caption" color="error">
                 {error}
               </MDTypography>
             )}
             <MDBox mt={4} mb={1}>
-              <MDButton type="submit" variant="gradient" color="info" fullWidth>
-                S&apos;inscrire
+              <MDButton type="submit" variant="gradient" color="info" fullWidth disabled={loading}>
+                {loading ? "Inscription..." : "S'inscrire"}
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">

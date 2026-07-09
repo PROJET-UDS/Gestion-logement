@@ -1,8 +1,11 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
+import PageLayout from "examples/LayoutContainers/PageLayout";
 
 function LandingPage() {
   return (
+    <PageLayout>
     <div style={{fontFamily: "sans-serif", margin: 0, padding: 0}}>
       
       {/* Navbar */}
@@ -13,8 +16,8 @@ function LandingPage() {
           <a href="#proprietes" style={{color: "white", marginRight: "20px", textDecoration: "none"}}>Propriétés</a>
           <a href="#apropos" style={{color: "white", marginRight: "20px", textDecoration: "none"}}>À propos</a>
           <a href="#contact" style={{color: "white", marginRight: "20px", textDecoration: "none"}}>Contact</a>
-          <a href="/authentification/sign-in" style={{backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", marginLeft: "10px"}}>Connexion</a>
-          <a href="/authentification/sign-up" style={{backgroundColor: "transparent", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", border: "1px solid white", marginLeft: "10px"}}>Inscription</a>
+          <Link to="/authentification/sign-in" style={{backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", marginLeft: "10px"}}>Connexion</Link>
+          <Link to="/authentification/sign-up" style={{backgroundColor: "transparent", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", border: "1px solid white", marginLeft: "10px"}}>Inscription</Link>
         </div>
       </nav>
 
@@ -76,7 +79,7 @@ function LandingPage() {
           <h2 style={{fontSize: "36px", marginBottom: "20px"}}>À Propos de Nous</h2>
           <p style={{color: "#666", lineHeight: "1.8", marginBottom: "20px"}}>Nous sommes une plateforme dédiée à la gestion de logements au Cameroun. Notre mission est de simplifier la recherche et la gestion de logements pour les propriétaires et les locataires.</p>
           <p style={{color: "#666", lineHeight: "1.8", marginBottom: "30px"}}>Avec notre système, vous pouvez gérer vos propriétés, suivre les paiements et communiquer facilement avec vos locataires.</p>
-          <a href="/authentification/sign-up" style={{backgroundColor: "#f0a500", color: "white", padding: "15px 30px", borderRadius: "25px", textDecoration: "none", fontWeight: "bold"}}>Commencer maintenant</a>
+          <Link to="/authentification/sign-up" style={{backgroundColor: "#f0a500", color: "white", padding: "15px 30px", borderRadius: "25px", textDecoration: "none", fontWeight: "bold"}}>Commencer maintenant</Link>
         </div>
         <div style={{backgroundColor: "#1a1a2e", width: "400px", height: "300px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center"}}>
           <span style={{fontSize: "100px"}}>🏘️</span>
@@ -110,6 +113,7 @@ function LandingPage() {
       </footer>
 
     </div>
+    </PageLayout>
   );
 }
 

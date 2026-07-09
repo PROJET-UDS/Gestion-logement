@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -7,30 +7,30 @@ import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentification/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import { getDefaultRouteForRole, login, saveAuthSession } from "services/authService";
 
 function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const response = await fetch("http://localhost:8081/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.token);
-        navigate("/dashboard");
-      } else {
-        setError("Email ou mot de passe incorrect");
-      }
+      const data = await login({ email, password });
+      const session = saveAuthSession(data);
+      const redirectTo = location.state?.from?.pathname || getDefaultRouteForRole(session.role);
+      navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError("Erreur de connexion au serveur");
+      setError(err.message || "Email ou mot de passe incorrect");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,8 +89,8 @@ function SignIn() {
               </MDTypography>
             )}
             <MDBox mt={4} mb={1}>
-              <MDButton type="submit" variant="gradient" color="info" fullWidth>
-                Se connecter
+              <MDButton type="submit" variant="gradient" color="info" fullWidth disabled={loading}>
+                {loading ? "Connexion..." : "Se connecter"}
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">

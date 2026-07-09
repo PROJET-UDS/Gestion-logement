@@ -1,5 +1,6 @@
 import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
+import UserDetail from "layouts/userdetail";
 import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
@@ -8,6 +9,7 @@ import SignIn from "layouts/authentification/sign-in";
 import SignUp from "layouts/authentification/sign-up";
 import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
+import { AUTHENTICATED_ROLES } from "services/authService";
 
 import Icon from "@mui/material/Icon";
 
@@ -19,22 +21,25 @@ const routes = [
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: <Dashboard />,
+    roles: AUTHENTICATED_ROLES,
   },
   {
     type: "collapse",
-    name: "Tables",
+    name: "Utilisateurs",
     key: "tables",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/tables",
     component: <Tables />,
+    roles: ["ADMIN"],
   },
   {
     type: "collapse",
-    name: "Billing",
+    name: "Paiements",
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/billing",
     component: <Billing />,
+    roles: ["CLIENT", "PROPRIETAIRE", "ADMIN"],
   },
   {
     type: "collapse",
@@ -43,6 +48,8 @@ const routes = [
     icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
     route: "/rtl",
     component: <RTL />,
+    roles: ["ADMIN"],
+    hideInSidenav: true,
   },
   {
     type: "collapse",
@@ -51,14 +58,16 @@ const routes = [
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/notifications",
     component: <Notifications />,
+    roles: AUTHENTICATED_ROLES,
   },
   {
     type: "collapse",
-    name: "Profile",
+    name: "Profil",
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
     component: <Profile />,
+    roles: AUTHENTICATED_ROLES,
   },
   {
     type: "collapse",
@@ -67,6 +76,8 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/authentification/sign-in",
     component: <SignIn />,
+    public: true,
+    hideInSidenav: true,
   },
   {
     type: "collapse",
@@ -75,6 +86,8 @@ const routes = [
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentification/sign-up",
     component: <SignUp />,
+    public: true,
+    hideInSidenav: true,
   },
   {
     type: "collapse",
@@ -83,6 +96,13 @@ const routes = [
     icon: <Icon fontSize="small">lock_reset</Icon>,
     route: "/authentification/reset-password",
     component: <ResetPassword />,
+    public: true,
+    hideInSidenav: true,
+  },
+  {
+    route: "/tables/:id",
+    key: "user-detail",
+    component: <UserDetail />,
   },
   {
     type: "collapse",
@@ -90,6 +110,8 @@ const routes = [
     key: "landing",
     route: "/",
     component: <LandingPage />,
+    public: true,
+    hideInSidenav: true,
   },
 ];
 

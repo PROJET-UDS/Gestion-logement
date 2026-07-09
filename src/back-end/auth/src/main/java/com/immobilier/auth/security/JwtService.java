@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ public class JwtService {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-expiration-ms:900000}") long accessExpMs,
             @Value("${jwt.refresh-expiration-ms:604800000}") long refreshExpMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessExpMs  = accessExpMs;
         this.refreshExpMs = refreshExpMs;
     }
@@ -47,9 +48,21 @@ public class JwtService {
                 .compact();
     }
 
-    public JwtClaims validateAndExtract(String token) {
+    public JwtClaims validateAndExtractAccessToken(String token) {
+        return validateAndExtract(token, "access");
+    }
+
+    public JwtClaims validateAndExtractRefreshToken(String token) {
+        return validateAndExtract(token, "refresh");
+    }
+
+    private JwtClaims validateAndExtract(String token, String expectedType) {
         Claims claims = Jwts.parser().verifyWith(key).build()
                 .parseSignedClaims(token).getPayload();
+        String tokenType = claims.get("type", String.class);
+        if (!expectedType.equals(tokenType)) {
+            throw new JwtException("Type de token invalide");
+        }
         return JwtClaims.builder()
                 .userId(claims.getSubject())
                 .email(claims.get("email", String.class))
@@ -58,7 +71,17 @@ public class JwtService {
     }
 
     public boolean isValid(String token) {
-        try { validateAndExtract(token); return true; }
-        catch (JwtException e) { return false; }
+        try { validateAndExtractAccessToken(token); return true; }
+        catch (JwtException | IllegalArgumentException e) { return false; }
+    }
+
+    public boolean isAccessTokenValid(String token) {
+        try { validateAndExtractAccessToken(token); return true; }
+        catch (JwtException | IllegalArgumentException e) { return false; }
+    }
+
+    public boolean isRefreshTokenValid(String token) {
+        try { validateAndExtractRefreshToken(token); return true; }
+        catch (JwtException | IllegalArgumentException e) { return false; }
     }
 }

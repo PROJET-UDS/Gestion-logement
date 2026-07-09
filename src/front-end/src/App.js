@@ -10,10 +10,36 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import routes from "routes";
-import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "context";
+import { useMaterialUIController, setMiniSidenav } from "context";
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
 import PrivateRoute from "components/PrivateRoute";
+import { getDefaultRouteForRole, getUserRole, isAuthenticated } from "services/authService";
+
+const findRouteByPath = (allRoutes, path) => {
+  for (const route of allRoutes) {
+    if (route.collapse) {
+      const nestedRoute = findRouteByPath(route.collapse, path);
+      if (nestedRoute) return nestedRoute;
+    }
+    if (route.route === path) return route;
+  }
+  return null;
+};
+
+const filterRoutesByRole = (allRoutes, role) =>
+  allRoutes
+    .map((route) => {
+      if (route.collapse) {
+        return { ...route, collapse: filterRoutesByRole(route.collapse, role) };
+      }
+      return route;
+    })
+    .filter((route) => {
+      if (route.hideInSidenav || !route.type) return false;
+      if (!route.roles) return true;
+      return route.roles.includes(role);
+    });
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -21,7 +47,6 @@ export default function App() {
     miniSidenav,
     direction,
     layout,
-    openConfigurator,
     sidenavColor,
     transparentSidenav,
     whiteSidenav,
@@ -30,6 +55,12 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
+  const role = getUserRole();
+  const authenticated = isAuthenticated();
+  const sidenavRoutes = filterRoutesByRole(routes, role);
+  const currentRoute = findRouteByPath(routes, pathname);
+  const showDashboardShell = layout === "dashboard" && authenticated && !currentRoute?.public;
+
 
   useMemo(() => {
     const cacheRtl = createCache({
@@ -53,8 +84,6 @@ export default function App() {
     }
   };
 
-  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
-
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
@@ -66,19 +95,14 @@ export default function App() {
         return getRoutes(route.collapse);
       }
       if (route.route) {
-        if (
-          route.route === "/authentification/sign-in" ||
-          route.route === "/authentification/sign-up" ||
-          route.route === "/authentification/reset-password" ||
-          route.route === "/"
-        ) {
+        if (route.public) {
           return <Route exact path={route.route} element={route.component} key={route.key} />;
         }
         return (
           <Route
             exact
             path={route.route}
-            element={<PrivateRoute>{route.component}</PrivateRoute>}
+            element={<PrivateRoute roles={route.roles}>{route.component}</PrivateRoute>}
             key={route.key}
           />
         );
@@ -86,21 +110,19 @@ export default function App() {
       return null;
     });
 
-  const configsButton = (
-    <></>
-  );
+  const configsButton = <></>;
 
   return direction === "rtl" ? (
     <CacheProvider value={rtlCache}>
       <ThemeProvider theme={themeRTL}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        {showDashboardShell && (
           <>
             <Sidenav
               color={sidenavColor}
               brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
               brandName="Gestion Logement"
-              routes={routes}
+              routes={sidenavRoutes}
               onMouseEnter={handleOnMouseEnter}
               onMouseLeave={handleOnMouseLeave}
             />
@@ -110,20 +132,20 @@ export default function App() {
         )}
         <Routes>
           {getRoutes(routes)}
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<Navigate to={authenticated ? getDefaultRouteForRole(role) : "/"} />} />
         </Routes>
       </ThemeProvider>
     </CacheProvider>
   ) : (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {layout === "dashboard" && (
+      {showDashboardShell && (
         <>
           <Sidenav
             color={sidenavColor}
             brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
             brandName="Gestion Logement"
-            routes={routes}
+            routes={sidenavRoutes}
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
           />
@@ -133,7 +155,7 @@ export default function App() {
       )}
       <Routes>
         {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to={authenticated ? getDefaultRouteForRole(role) : "/"} />} />
       </Routes>
     </ThemeProvider>
   );

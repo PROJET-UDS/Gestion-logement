@@ -1,203 +1,313 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023  (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// @mui material components
+import { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
-
-// @mui icons
-import FacebookIcon from "@mui/icons-material/Facebook";
-import TwitterIcon from "@mui/icons-material/Twitter";
-import InstagramIcon from "@mui/icons-material/Instagram";
-
-// Material Dashboard 2 React components
+import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-
-// Material Dashboard 2 React example components
+import MDInput from "components/MDInput";
+import MDButton from "components/MDButton";
+import MDAvatar from "components/MDAvatar";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
-import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
-import ProfilesList from "examples/Lists/ProfilesList";
-import DefaultProjectCard from "examples/Cards/ProjectCards/DefaultProjectCard";
+import burceMars from "assets/images/bruce-mars.jpg";
 
-// Overview page components
-import Header from "layouts/profile/components/Header";
-import PlatformSettings from "layouts/profile/components/PlatformSettings";
+function Profile() {
+  const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [message, setMessage] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [photo, setPhoto] = useState(burceMars);
+  const [photoFile, setPhotoFile] = useState(null);
 
-// Data
-import profilesListData from "layouts/profile/data/profilesListData";
+  // Champs pour le changement de mot de passe
+  const [ancienMotDePasse, setAncienMotDePasse] = useState("");
+  const [nouveauMotDePasse, setNouveauMotDePasse] = useState("");
+  const [confirmerMotDePasse, setConfirmerMotDePasse] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-// Images
-import homeDecor1 from "assets/images/home-decor-1.jpg";
-import homeDecor2 from "assets/images/home-decor-2.jpg";
-import homeDecor3 from "assets/images/home-decor-3.jpg";
-import homeDecor4 from "assets/images/home-decor-4.jpeg";
-import team1 from "assets/images/team-1.jpg";
-import team2 from "assets/images/team-2.jpg";
-import team3 from "assets/images/team-3.jpg";
-import team4 from "assets/images/team-4.jpg";
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:8082/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setNom(data.nom || "");
+          setEmail(data.email || "");
+          setTelephone(data.telephone || "");
+          if (data.photoUrl) setPhoto(data.photoUrl);
+        }
+      } catch (err) {
+        console.log("Impossible de charger le profil pour le moment");
+      }
+    };
+    fetchProfile();
+  }, []);
 
-function Overview() {
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhoto(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch("http://localhost:8082/api/users/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nom, email, telephone }),
+      });
+
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("photo", photoFile);
+        await fetch("http://localhost:8082/api/users/me/photo", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+      }
+
+      if (response.ok) {
+        setMessage("Profil mis à jour avec succès !");
+        setIsEditing(false);
+      } else {
+        setMessage("Erreur lors de la mise à jour");
+      }
+    } catch (err) {
+      setMessage("Erreur de connexion au serveur");
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordMessage("");
+
+    if (nouveauMotDePasse !== confirmerMotDePasse) {
+      setPasswordError("Les mots de passe ne correspondent pas");
+      return;
+    }
+    if (nouveauMotDePasse.length < 6) {
+      setPasswordError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8082/api/users/me/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ancienMotDePasse,
+          nouveauMotDePasse,
+        }),
+      });
+
+      if (response.ok) {
+        setPasswordMessage("Mot de passe changé avec succès !");
+        setAncienMotDePasse("");
+        setNouveauMotDePasse("");
+        setConfirmerMotDePasse("");
+      } else {
+        setPasswordError("Ancien mot de passe incorrect");
+      }
+    } catch (err) {
+      setPasswordError("Erreur de connexion au serveur");
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox mb={2} />
-      <Header>
-        <MDBox mt={5} mb={3}>
-          <Grid container spacing={1}>
-            <Grid item xs={12} md={6} xl={4}>
-              <PlatformSettings />
-            </Grid>
-            <Grid item xs={12} md={6} xl={4} sx={{ display: "flex" }}>
-              <Divider orientation="vertical" sx={{ ml: -2, mr: 1 }} />
-              <ProfileInfoCard
-                title="profile information"
-                description="Hi, I’m Alec Thompson, Decisions: If you can’t decide, the answer is no. If two equally difficult paths, choose the one more painful in the short term (pain avoidance is creating an illusion of equality)."
-                info={{
-                  fullName: "Alec M. Thompson",
-                  mobile: "(44) 123 1234 123",
-                  email: "alecthompson@mail.com",
-                  location: "USA",
-                }}
-                social={[
-                  {
-                    link: "https://www.facebook.com/CreativeTim/",
-                    icon: <FacebookIcon />,
-                    color: "facebook",
-                  },
-                  {
-                    link: "https://twitter.com/creativetim",
-                    icon: <TwitterIcon />,
-                    color: "twitter",
-                  },
-                  {
-                    link: "https://www.instagram.com/creativetimofficial/",
-                    icon: <InstagramIcon />,
-                    color: "instagram",
-                  },
-                ]}
-                action={{ route: "", tooltip: "Edit Profile" }}
-                shadow={false}
-              />
-              <Divider orientation="vertical" sx={{ mx: 0 }} />
-            </Grid>
-            <Grid item xs={12} xl={4}>
-              <ProfilesList title="conversations" profiles={profilesListData} shadow={false} />
-            </Grid>
+      <MDBox mb={3}>
+        <Grid container spacing={3}>
+          {/* Carte Informations personnelles */}
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
+                <MDBox display="flex" alignItems="center" mb={3}>
+                  <MDBox position="relative">
+                    <MDAvatar src={photo} alt="profile-image" size="xl" shadow="sm" />
+                    {isEditing && (
+                      <MDBox
+                        component="label"
+                        htmlFor="photo-upload"
+                        position="absolute"
+                        bottom={0}
+                        right={0}
+                        bgColor="info"
+                        borderRadius="50%"
+                        width="28px"
+                        height="28px"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <MDTypography variant="button" color="white" fontSize="14px">
+                          ✎
+                        </MDTypography>
+                        <input
+                          id="photo-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoChange}
+                          style={{ display: "none" }}
+                        />
+                      </MDBox>
+                    )}
+                  </MDBox>
+                  <MDBox ml={2} lineHeight={0}>
+                    <MDTypography variant="h5" fontWeight="medium">
+                      {nom || "Mon Profil"}
+                    </MDTypography>
+                    <MDTypography variant="button" color="text">
+                      {email}
+                    </MDTypography>
+                  </MDBox>
+                </MDBox>
+
+                <MDBox component="form" role="form" onSubmit={handleSave}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <MDInput
+                        type="text"
+                        label="Nom complet"
+                        fullWidth
+                        value={nom}
+                        onChange={(e) => setNom(e.target.value)}
+                        disabled={!isEditing}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <MDInput
+                        type="email"
+                        label="Email"
+                        fullWidth
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={!isEditing}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <MDInput
+                        type="text"
+                        label="Téléphone"
+                        fullWidth
+                        value={telephone}
+                        onChange={(e) => setTelephone(e.target.value)}
+                        disabled={!isEditing}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {message && (
+                    <MDTypography variant="caption" color="info" mt={2} display="block">
+                      {message}
+                    </MDTypography>
+                  )}
+
+                  <MDBox mt={3} display="flex" gap={2}>
+                    {!isEditing ? (
+                      <MDButton
+                        variant="gradient"
+                        color="info"
+                        onClick={() => setIsEditing(true)}
+                        type="button"
+                      >
+                        Modifier
+                      </MDButton>
+                    ) : (
+                      <MDButton variant="gradient" color="success" type="submit">
+                        Enregistrer
+                      </MDButton>
+                    )}
+                  </MDBox>
+                </MDBox>
+              </MDBox>
+            </Card>
           </Grid>
-        </MDBox>
-        <MDBox pt={2} px={2} lineHeight={1.25}>
-          <MDTypography variant="h6" fontWeight="medium">
-            Projects
-          </MDTypography>
-          <MDBox mb={1}>
-            <MDTypography variant="button" color="text">
-              Architects design houses
-            </MDTypography>
-          </MDBox>
-        </MDBox>
-        <MDBox p={2}>
-          <Grid container spacing={6}>
-            <Grid item xs={12} md={6} xl={3}>
-              <DefaultProjectCard
-                image={homeDecor1}
-                label="project #2"
-                title="modern"
-                description="As Uber works through a huge amount of internal management turmoil."
-                action={{
-                  type: "internal",
-                  route: "/pages/profile/profile-overview",
-                  color: "info",
-                  label: "view project",
-                }}
-                authors={[
-                  { image: team1, name: "Elena Morison" },
-                  { image: team2, name: "Ryan Milly" },
-                  { image: team3, name: "Nick Daniel" },
-                  { image: team4, name: "Peterson" },
-                ]}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} xl={3}>
-              <DefaultProjectCard
-                image={homeDecor2}
-                label="project #1"
-                title="scandinavian"
-                description="Music is something that everyone has their own specific opinion about."
-                action={{
-                  type: "internal",
-                  route: "/pages/profile/profile-overview",
-                  color: "info",
-                  label: "view project",
-                }}
-                authors={[
-                  { image: team3, name: "Nick Daniel" },
-                  { image: team4, name: "Peterson" },
-                  { image: team1, name: "Elena Morison" },
-                  { image: team2, name: "Ryan Milly" },
-                ]}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} xl={3}>
-              <DefaultProjectCard
-                image={homeDecor3}
-                label="project #3"
-                title="minimalist"
-                description="Different people have different taste, and various types of music."
-                action={{
-                  type: "internal",
-                  route: "/pages/profile/profile-overview",
-                  color: "info",
-                  label: "view project",
-                }}
-                authors={[
-                  { image: team4, name: "Peterson" },
-                  { image: team3, name: "Nick Daniel" },
-                  { image: team2, name: "Ryan Milly" },
-                  { image: team1, name: "Elena Morison" },
-                ]}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} xl={3}>
-              <DefaultProjectCard
-                image={homeDecor4}
-                label="project #4"
-                title="gothic"
-                description="Why would anyone pick blue over pink? Pink is obviously a better color."
-                action={{
-                  type: "internal",
-                  route: "/pages/profile/profile-overview",
-                  color: "info",
-                  label: "view project",
-                }}
-                authors={[
-                  { image: team4, name: "Peterson" },
-                  { image: team3, name: "Nick Daniel" },
-                  { image: team2, name: "Ryan Milly" },
-                  { image: team1, name: "Elena Morison" },
-                ]}
-              />
-            </Grid>
+
+          {/* Carte Changer le mot de passe */}
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
+                <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                  Changer le mot de passe
+                </MDTypography>
+                <MDBox component="form" role="form" onSubmit={handleChangePassword}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Mot de passe actuel"
+                        fullWidth
+                        value={ancienMotDePasse}
+                        onChange={(e) => setAncienMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Nouveau mot de passe"
+                        fullWidth
+                        value={nouveauMotDePasse}
+                        onChange={(e) => setNouveauMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <MDInput
+                        type="password"
+                        label="Confirmer le mot de passe"
+                        fullWidth
+                        value={confirmerMotDePasse}
+                        onChange={(e) => setConfirmerMotDePasse(e.target.value)}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {passwordMessage && (
+                    <MDTypography variant="caption" color="success" mt={2} display="block">
+                      {passwordMessage}
+                    </MDTypography>
+                  )}
+                  {passwordError && (
+                    <MDTypography variant="caption" color="error" mt={2} display="block">
+                      {passwordError}
+                    </MDTypography>
+                  )}
+
+                  <MDBox mt={3}>
+                    <MDButton variant="gradient" color="info" type="submit">
+                      Changer le mot de passe
+                    </MDButton>
+                  </MDBox>
+                </MDBox>
+              </MDBox>
+            </Card>
           </Grid>
-        </MDBox>
-      </Header>
+        </Grid>
+      </MDBox>
       <Footer />
     </DashboardLayout>
   );
 }
 
-export default Overview;
+export default Profile;

@@ -1,12 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import MDButton from "components/MDButton";
 import Icon from "@mui/material/Icon";
+import { clearAuthSession } from "services/authService";
 
 function Logout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    clearAuthSession();
     navigate("/authentification/sign-in");
   };
 

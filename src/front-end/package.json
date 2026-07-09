@@ -38,12 +38,13 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start"
+    "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start",
+    "backend": "bash ../start-backend.sh",
+    "postinstall": "node -e \"const p='node_modules/stylis-plugin-rtl/dist/stylis-rtl.js';require('fs').writeFileSync(p,require('fs').readFileSync(p,'utf8').replace('//# sourceMappingURL=stylis-rtl.js.map',''),'utf8')\""
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
@@ -67,7 +68,8 @@
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-react": "7.32.2",
     "eslint-plugin-react-hooks": "4.6.0",
-    "prettier": "2.8.8"
+    "prettier": "2.8.8",
+    "typescript": "^4.9.5"
   },
   "overrides": {
     "svgo": "3.0.2"
