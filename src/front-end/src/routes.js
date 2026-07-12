@@ -1,6 +1,7 @@
 import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
 import UserDetail from "layouts/userdetail";
+import Logements from "layouts/logements";
 import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
@@ -20,6 +21,14 @@ const routes = [
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: <Dashboard />,
+  },
+  {
+    type: "collapse",
+    name: "Logements",
+    key: "logements",
+    icon: <Icon fontSize="small">home_work</Icon>,
+    route: "/logements",
+    component: <Logements />,
   },
   {
     type: "collapse",
