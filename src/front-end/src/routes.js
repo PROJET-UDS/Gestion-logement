@@ -4,6 +4,7 @@ import UserDetail from "layouts/userdetail";
 import Logements from "layouts/logements";
 import LogementDetail from "layouts/logementdetail";
 import AjouterLogement from "layouts/logements/ajouter";
+import ModifierLogement from "layouts/logements/modifier";
 import Billing from "layouts/billing";
 import RTL from "layouts/rtl";
 import Notifications from "layouts/notifications";
@@ -105,6 +106,11 @@ const routes = [
     route: "/logements/ajouter",
     key: "logement-ajouter",
     component: <AjouterLogement />,
+  },
+  {
+    route: "/logements/:id/modifier",
+    key: "logement-modifier",
+    component: <ModifierLogement />,
   },
   {
     route: "/logements/:id",
