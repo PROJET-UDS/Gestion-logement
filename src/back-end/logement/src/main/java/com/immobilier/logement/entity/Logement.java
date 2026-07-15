@@ -101,7 +101,15 @@ public class Logement {
     @PrePersist
     protected void onCreate() {
         this.dateCreation = LocalDateTime.now();
-        this.statutAnnonce = StatutAnnonce.EN_ATTENTE;
+        if (this.statutAnnonce == null) {
+            this.statutAnnonce = StatutAnnonce.VALIDE;
+        }
+        if (this.statutLogement == null) {
+            this.statutLogement = com.immobilier.logement.enums.StatutLogement.DISPONIBLE;
+        }
+        if (this.supprime == null) {
+            this.supprime = false;
+        }
     }
 
     @PreUpdate
