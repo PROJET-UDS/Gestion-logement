@@ -60,6 +60,25 @@ export async function getLogementById(id) {
   return response.json();
 }
 
+export async function getLogementsPublic() {
+  const response = await fetch(`${API_BASE_URL}/api/v1/logements`);
+  if (!response.ok) throw new Error("Erreur lors du chargement des logements");
+  return response.json();
+}
+
+export async function rechercherLogements({ ville, prixMax, typeLogement, typeTransaction } = {}) {
+  const params = new URLSearchParams();
+  if (ville) params.append("ville", ville);
+  if (prixMax) params.append("prixMax", prixMax);
+  if (typeLogement) params.append("typeLogement", typeLogement);
+  if (typeTransaction) params.append("typeTransaction", typeTransaction);
+
+  const url = `${API_BASE_URL}/api/v1/logements/recherche${params.toString() ? "?" + params.toString() : ""}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Erreur lors de la recherche");
+  return response.json();
+}
+
 export function getFileUrl(fileUrl) {
   if (!fileUrl) return "";
   if (fileUrl.startsWith("http")) return fileUrl;

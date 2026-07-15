@@ -18,7 +18,7 @@ public class Reservation {
     private Long logementId;
 
     @Column(name = "client_id", nullable = false)
-    private Long clientId;
+    private String clientId;
 
     @Column(name = "date_debut", nullable = false)
     private LocalDate dateDebut;
@@ -60,12 +60,12 @@ public class Reservation {
         this.logementId= logementId;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
-        this.clientId= clientId;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public LocalDate getDateDebut() {

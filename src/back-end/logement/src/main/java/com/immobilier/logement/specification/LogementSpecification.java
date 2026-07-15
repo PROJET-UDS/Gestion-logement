@@ -1,6 +1,7 @@
 package com.immobilier.logement.specification;
 
 import com.immobilier.logement.entity.Logement;
+import com.immobilier.logement.enums.StatutAnnonce;
 import com.immobilier.logement.enums.TypeLogement;
 import com.immobilier.logement.enums.TypeTransaction;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,8 +22,13 @@ public class LogementSpecification {
             TypeTransaction typeTransaction) {
 
         return (root, query, criteriaBuilder) -> {
-            // Liste pour stocker toutes nos conditions SQL (les Predicates)
             List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("statutAnnonce"), StatutAnnonce.VALIDE));
+            predicates.add(criteriaBuilder.or(
+                    criteriaBuilder.equal(root.get("supprime"), false),
+                    criteriaBuilder.isNull(root.get("supprime"))
+            ));
 
             // 1. Filtre par Ville (recherche insensible à la casse et partielle ex: "dsch" trouvera "Dschang")
             if (ville != null && !ville.trim().isEmpty()) {

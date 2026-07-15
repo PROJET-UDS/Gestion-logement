@@ -139,7 +139,7 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    public List<ReservationResponseDTO> getReservationsParClient(Long clientId) {
+    public List<ReservationResponseDTO> getReservationsParClient(String clientId) {
         return reservationRepository.findByClientId(clientId).stream()
                 .map(reservationMapper::toResponseDTO)
                 .collect(Collectors.toList());

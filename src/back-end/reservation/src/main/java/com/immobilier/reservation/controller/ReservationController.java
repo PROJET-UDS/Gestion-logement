@@ -1,11 +1,14 @@
 package com.immobilier.reservation.controller;
+
 import com.immobilier.reservation.dto.ReservationRequestDTO;
 import com.immobilier.reservation.dto.ReservationResponseDTO;
+import com.immobilier.reservation.security.AuthenticatedUser;
 import com.immobilier.reservation.service.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +25,12 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponseDTO> creer(@Valid @RequestBody ReservationRequestDTO dto) {
+    public ResponseEntity<ReservationResponseDTO> creer(
+            @Valid @RequestBody ReservationRequestDTO dto,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        if (user != null) {
+            dto.setClientId(user.userId());
+        }
         ReservationResponseDTO reservation = reservationService.creerReservation(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
     }
@@ -38,8 +46,14 @@ public class ReservationController {
     }
 
     @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<ReservationResponseDTO>> getParClient(@PathVariable Long clientId) {
+    public ResponseEntity<List<ReservationResponseDTO>> getParClient(@PathVariable String clientId) {
         return ResponseEntity.ok(reservationService.getReservationsParClient(clientId));
+    }
+
+    @GetMapping("/mes-reservations")
+    public ResponseEntity<List<ReservationResponseDTO>> mesReservations(
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(reservationService.getReservationsParClient(user.userId()));
     }
 
     @GetMapping("/logement/{logementId}")
