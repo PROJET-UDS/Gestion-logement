@@ -10,6 +10,7 @@ import SignUp from "layouts/authentification/sign-up";
 import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
 import { AjouterLogement, MesLogements, LogementDetail } from "layouts/logements";
+import { SiteAnnonces, SiteLogementDetail } from "layouts/site";
 import { AUTHENTICATED_ROLES } from "services/authService";
 
 import Icon from "@mui/material/Icon";
@@ -126,6 +127,20 @@ const routes = [
     key: "logement-detail",
     component: <LogementDetail />,
     roles: AUTHENTICATED_ROLES,
+    hideInSidenav: true,
+  },
+  {
+    route: "/annonces",
+    key: "annonces",
+    component: <SiteAnnonces />,
+    public: true,
+    hideInSidenav: true,
+  },
+  {
+    route: "/annonces/:id",
+    key: "annonce-detail",
+    component: <SiteLogementDetail />,
+    public: true,
     hideInSidenav: true,
   },
   {

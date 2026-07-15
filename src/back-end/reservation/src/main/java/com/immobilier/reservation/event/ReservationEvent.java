@@ -14,7 +14,7 @@ public class ReservationEvent implements Serializable {
 
     private Long reservationId;
     private Long logementId;
-    private Long clientId;
+    private String clientId;
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private BigDecimal prixTotal;
@@ -23,7 +23,7 @@ public class ReservationEvent implements Serializable {
     public ReservationEvent() {
     }
 
-    public ReservationEvent(Long reservationId, Long logementId, Long clientId,
+    public ReservationEvent(Long reservationId, Long logementId, String clientId,
                             LocalDate dateDebut, LocalDate dateFin,
                             BigDecimal prixTotal, StatutReservation statut) {
         this.reservationId = reservationId;
@@ -51,11 +51,11 @@ public class ReservationEvent implements Serializable {
         this.logementId = logementId;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 

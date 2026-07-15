@@ -39,6 +39,7 @@ public class LogementServiceImpl implements LogementService {
     @Transactional
     public LogementResponseDTO creerLogement(LogementRequestDTO requestDTO) {
         Logement logement = logementMapper.toEntity(requestDTO);
+        logement.setStatutAnnonce(StatutAnnonce.VALIDE);
 
         if (requestDTO.getMedias() != null) {
             List<MediaLogement> medias = requestDTO.getMedias().stream()

@@ -1,0 +1,43 @@
+import { getAccessToken } from "services/authService";
+
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  "http://localhost:8089";
+
+function authHeaders() {
+  const token = getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function creerReservation(data) {
+  const response = await fetch(`${API_BASE_URL}/api/reservations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors de la réservation");
+  }
+  return response.json();
+}
+
+export async function getMesReservations() {
+  const response = await fetch(`${API_BASE_URL}/api/reservations/mes-reservations`, {
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok) throw new Error("Erreur lors du chargement des réservations");
+  return response.json();
+}
+
+export async function annulerReservation(id) {
+  const response = await fetch(`${API_BASE_URL}/api/reservations/${id}/annuler`, {
+    method: "PATCH",
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors de l'annulation");
+  }
+  return response.json();
+}

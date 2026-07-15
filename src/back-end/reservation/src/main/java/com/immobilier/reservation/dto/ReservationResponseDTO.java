@@ -11,7 +11,7 @@ public class ReservationResponseDTO {
     private Long id;
     private Long logementId;
     private String logementTitre;
-    private Long clientId;
+    private String clientId;
     private String clientNom;
     private LocalDate dateDebut;
     private LocalDate dateFin;
@@ -23,7 +23,7 @@ public class ReservationResponseDTO {
     }
 
     public ReservationResponseDTO(Long id, Long logementId, String logementTitre,
-                                  Long clientId, String clientNom,
+                                  String clientId, String clientNom,
                                   LocalDate dateDebut, LocalDate dateFin,
                                   BigDecimal prixTotal, StatutReservation statut,
                                   LocalDateTime dateCreation) {
@@ -65,11 +65,11 @@ public class ReservationResponseDTO {
         this.logementTitre = logementTitre;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 

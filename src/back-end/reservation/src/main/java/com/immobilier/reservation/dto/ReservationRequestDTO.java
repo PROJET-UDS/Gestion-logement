@@ -11,8 +11,7 @@ public class ReservationRequestDTO {
     @NotNull(message = "L'identifiant du logement est obligatoire")
     private Long logementId;
 
-    @NotNull(message = "L'identifiant du client est obligatoire")
-    private Long clientId;
+    private String clientId;
 
     @NotNull(message = "La date de début est obligatoire")
     @FutureOrPresent(message = "La date de début ne peut pas être dans le passé")
@@ -30,11 +29,11 @@ public class ReservationRequestDTO {
         this.logementId = logementId;
     }
 
-    public Long getClientId() {
+    public String getClientId() {
         return clientId;
     }
 
-    public void setClientId(Long clientId) {
+    public void setClientId(String clientId) {
         this.clientId = clientId;
     }
 
