@@ -17,7 +17,7 @@ public interface LogementService {
     LogementResponseDTO obtenirLogementParId(Long id);
 
     // Version surchargée (avec utilisateur connecté, enregistre dans l'historique)
-    LogementResponseDTO obtenirLogementParId(Long id, Long utilisateurIdConnecte);
+    LogementResponseDTO obtenirLogementParId(Long id, String utilisateurIdConnecte);
 
     List<LogementResponseDTO> obtenirTousLesLogementsValides();
 
@@ -28,4 +28,6 @@ public interface LogementService {
     List<LogementResponseDTO> obtenirLogementsProches(Double lat, Double lon, Double rayon);
 
     PrixInsightDTO obtenirInsightsPrix(String ville, TypeLogement typeLogement, Double prixPropose);
+
+    List<LogementResponseDTO> obtenirLogementsParProprietaire(String proprietaireId);
 }

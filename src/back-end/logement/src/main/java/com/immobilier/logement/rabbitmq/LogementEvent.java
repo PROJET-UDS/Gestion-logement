@@ -15,5 +15,5 @@ public class LogementEvent {
     private String titre;
     private BigDecimal prix;
     private TypeTransaction typeTransaction;
-    private Long proprietaireId;
+    private String proprietaireId;
 }

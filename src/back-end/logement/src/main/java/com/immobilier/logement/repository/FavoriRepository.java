@@ -8,10 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface FavoriRepository extends JpaRepository<Favori, Long> {
-
-    // Récupère la liste des favoris d'un utilisateur triés par date décroissante
-    List<Favori> findByUtilisateurIdOrderByDateAjoutDesc(Long utilisateurId);
-
-    // Permet de vérifier si un favori existe déjà pour le supprimer (Unfavori)
-    Optional<Favori> findByUtilisateurIdAndLogementId(Long utilisateurId, Long logementId);
+    List<Favori> findByUtilisateurIdOrderByDateAjoutDesc(String utilisateurId);
+    Optional<Favori> findByUtilisateurIdAndLogementId(String utilisateurId, Long logementId);
 }

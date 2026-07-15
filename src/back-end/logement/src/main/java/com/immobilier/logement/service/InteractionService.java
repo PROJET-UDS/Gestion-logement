@@ -7,10 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface InteractionService {
-    // Logique des Avis
-    Avis ajouterAvis(Long logementId, Long utilisateurId, String nomUtilisateur, Integer note, String commentaire);
+    Avis ajouterAvis(Long logementId, String utilisateurId, String nomUtilisateur, Integer note, String commentaire);
     Page<Avis> obtenirAvisParLogement(Long logementId, Pageable pageable);
-
-    // Logique des Signalements
-    Signalement signalerLogement(Long logementId, Long utilisateurId, MotifSignalement motif, String description);
+    Signalement signalerLogement(Long logementId, String utilisateurId, MotifSignalement motif, String description);
 }

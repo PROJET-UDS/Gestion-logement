@@ -38,14 +38,13 @@ public class LogementServiceImpl implements LogementService {
     @Override
     @Transactional
     public LogementResponseDTO creerLogement(LogementRequestDTO requestDTO) {
-        // 1. Conversion du DTO reçu en entité Logement
         Logement logement = logementMapper.toEntity(requestDTO);
 
-        // 2. Gestion des médias associés (photos, vues 360°)
         if (requestDTO.getMedias() != null) {
             List<MediaLogement> medias = requestDTO.getMedias().stream()
                     .map(dto -> MediaLogement.builder()
                             .fileUrl(dto.getFileUrl())
+                            .mediaType(dto.getMediaType())
                             .is360View(dto.is360View())
                             .logement(logement)
                             .build())
@@ -53,19 +52,14 @@ public class LogementServiceImpl implements LogementService {
             logement.setMedias(medias);
         }
 
-        // 3. Sauvegarde définitive du logement en Base de Données
         Logement sauvegarde = logementRepository.save(logement);
 
-        // ====================================================================
-        // AJOUT : Vérification et déclenchement des alertes utilisateurs
-        // ====================================================================
         try {
             alerteService.verifierEtDeclencherAlertes(sauvegarde);
         } catch (Exception e) {
             System.err.println("[ERREUR ALERTE] Impossible de vérifier les alertes : " + e.getMessage());
         }
 
-        // 4. Publication de ton événement RabbitMQ existant
         LogementEvent event = new LogementEvent(
                 sauvegarde.getId(),
                 sauvegarde.getTitre(),
@@ -80,11 +74,9 @@ public class LogementServiceImpl implements LogementService {
                 event
         );
 
-        // 5. Retour du résultat converti en DTO de réponse
         return logementMapper.toResponseDTO(sauvegarde);
     }
 
-    // Version classique : appelée par les routes anonymes ou de recherche générale
     @Override
     @Transactional(readOnly = true)
     public LogementResponseDTO obtenirLogementParId(Long id) {
@@ -93,14 +85,12 @@ public class LogementServiceImpl implements LogementService {
         return logementMapper.toResponseDTO(logement);
     }
 
-    // Version surchargée CORRIGÉE : à appeler si un utilisateur connecté visite le logement
     @Override
     @Transactional
-    public LogementResponseDTO obtenirLogementParId(Long id, Long utilisateurIdConnecte) {
+    public LogementResponseDTO obtenirLogementParId(Long id, String utilisateurIdConnecte) {
         Logement logement = logementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
 
-        // Enregistrement automatique dans l'historique de consultation si l'ID utilisateur est fourni
         if (utilisateurIdConnecte != null) {
             favoriHistoriqueService.enregistrerConsultation(utilisateurIdConnecte, id);
         }
@@ -126,13 +116,8 @@ public class LogementServiceImpl implements LogementService {
 
     @Override
     public List<LogementResponseDTO> rechercherLogements(String ville, Double prixMax, TypeLogement typeLogement, TypeTransaction typeTransaction) {
-        // 1. On appelle notre classe de spécification pour créer le filtre dynamique
         Specification<Logement> spec = LogementSpecification.filterLogements(ville, prixMax, typeLogement, typeTransaction);
-
-        // 2. On exécute la requête en BDD avec la spécification
         List<Logement> logements = logementRepository.findAll(spec);
-
-        // 3. On convertit la liste d'entités en liste de DTOs
         return logements.stream()
                 .map(logementMapper::toResponseDTO)
                 .toList();
@@ -140,13 +125,8 @@ public class LogementServiceImpl implements LogementService {
 
     @Override
     public List<LogementResponseDTO> obtenirLogementsProches(Double lat, Double lon, Double rayon) {
-        // 1. Si l'utilisateur ne précise pas de rayon, valeur par défaut : 5 kilomètres
         Double rayonRecherche = (rayon != null) ? rayon : 5.0;
-
-        // 2. On appelle le repository avec la formule de Haversine intégrée
         List<Logement> logementsProches = logementRepository.trouverLogementsProches(lat, lon, rayonRecherche);
-
-        // 3. On transforme le résultat en DTO
         return logementsProches.stream()
                 .map(logementMapper::toResponseDTO)
                 .toList();
@@ -154,11 +134,8 @@ public class LogementServiceImpl implements LogementService {
 
     @Override
     public PrixInsightDTO obtenirInsightsPrix(String ville, TypeLogement typeLogement, Double prixPropose) {
-
-        // 1. On va chercher les statistiques calculées par PostgreSQL pour cette zone
         Optional<StatistiquesPrixProjection> depecheStats = logementRepository.obtenirStatistiquesZone(ville, typeLogement.name());
 
-        // Si aucun logement similaire n'existe encore dans cette ville, on renvoie des stats vides
         if (depecheStats.isEmpty()) {
             return PrixInsightDTO.builder()
                     .ville(ville)
@@ -171,17 +148,15 @@ public class LogementServiceImpl implements LogementService {
         StatistiquesPrixProjection stats = depecheStats.get();
         Double moyen = stats.getPrixMoyen();
 
-        // 2. Génération d'un conseil intelligent basé sur les chiffres du marché
         String conseil = "Votre prix est parfaitement aligné avec la moyenne du marché local.";
         if (prixPropose != null) {
-            if (prixPropose > moyen * 1.2) { // Plus de 20% au-dessus de la moyenne
+            if (prixPropose > moyen * 1.2) {
                 conseil = "Attention, votre prix est nettement supérieur à la moyenne de la zone (" + String.format("%.0f", moyen) + " FCFA). Vous risquez de mettre du temps à louer/vendre.";
-            } else if (prixPropose < moyen * 0.8) { // Plus de 20% en dessous
+            } else if (prixPropose < moyen * 0.8) {
                 conseil = "Excellent ! Votre prix est très compétitif par rapport au marché local. Votre bien sera rapidement sélectionné.";
             }
         }
 
-        // 3. Construction et retour du DTO complet
         return PrixInsightDTO.builder()
                 .ville(stats.getVille())
                 .typeLogement(stats.getTypeLogement())
@@ -191,5 +166,13 @@ public class LogementServiceImpl implements LogementService {
                 .prixMaximum(stats.getPrixMax())
                 .conseilPositionnement(conseil)
                 .build();
+    }
+
+    @Override
+    public List<LogementResponseDTO> obtenirLogementsParProprietaire(String proprietaireId) {
+        return logementRepository.findByProprietaireId(proprietaireId).stream()
+                .filter(l -> !Boolean.TRUE.equals(l.getSupprime()))
+                .map(logementMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 }

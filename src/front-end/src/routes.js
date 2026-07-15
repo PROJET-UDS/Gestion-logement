@@ -9,6 +9,7 @@ import SignIn from "layouts/authentification/sign-in";
 import SignUp from "layouts/authentification/sign-up";
 import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
+import { AjouterLogement, MesLogements, LogementDetail } from "layouts/logements";
 import { AUTHENTICATED_ROLES } from "services/authService";
 
 import Icon from "@mui/material/Icon";
@@ -22,6 +23,15 @@ const routes = [
     route: "/dashboard",
     component: <Dashboard />,
     roles: AUTHENTICATED_ROLES,
+  },
+  {
+    type: "collapse",
+    name: "Mes Logements",
+    key: "mes-logements",
+    icon: <Icon fontSize="small">home</Icon>,
+    route: "/mes-logements",
+    component: <MesLogements />,
+    roles: ["PROPRIETAIRE"],
   },
   {
     type: "collapse",
@@ -103,6 +113,20 @@ const routes = [
     route: "/tables/:id",
     key: "user-detail",
     component: <UserDetail />,
+  },
+  {
+    route: "/ajouter-logement",
+    key: "ajouter-logement",
+    component: <AjouterLogement />,
+    roles: ["PROPRIETAIRE"],
+    hideInSidenav: true,
+  },
+  {
+    route: "/logements/:id",
+    key: "logement-detail",
+    component: <LogementDetail />,
+    roles: AUTHENTICATED_ROLES,
+    hideInSidenav: true,
   },
   {
     type: "collapse",

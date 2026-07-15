@@ -57,14 +57,14 @@ class LogementServiceTest {
         requestDTO = new LogementRequestDTO();
         requestDTO.setTitre("Studio moderne");
         requestDTO.setPrix(new BigDecimal("150000"));
-        requestDTO.setProprietaireId(1L);
+        requestDTO.setProprietaireId("191ef4b1-7b18-495f-869b-50d14a26023d");
         requestDTO.setMedias(new ArrayList<>());
 
         logement = Logement.builder()
                 .id(1L)
                 .titre("Studio moderne")
                 .prix(new BigDecimal("150000"))
-                .proprietaireId(1L)
+                .proprietaireId("191ef4b1-7b18-495f-869b-50d14a26023d")
                 .statutAnnonce(StatutAnnonce.EN_ATTENTE)
                 .build();
 

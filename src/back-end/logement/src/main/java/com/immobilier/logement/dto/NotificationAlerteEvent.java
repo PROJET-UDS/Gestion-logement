@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class NotificationAlerteEvent implements Serializable {
-    private Long utilisateurId;
+    private String utilisateurId;
     private Long logementId;
     private String titreLogement;
     private String ville;

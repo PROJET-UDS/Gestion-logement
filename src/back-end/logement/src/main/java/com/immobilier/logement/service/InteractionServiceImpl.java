@@ -33,7 +33,7 @@ public class InteractionServiceImpl implements InteractionService {
 
     @Override
     @Transactional
-    public Avis ajouterAvis(Long logementId, Long utilisateurId, String nomUtilisateur, Integer note, String commentaire) {
+    public Avis ajouterAvis(Long logementId, String utilisateurId, String nomUtilisateur, Integer note, String commentaire) {
         if (note < 1 || note > 5) {
             throw new IllegalArgumentException("La note doit être comprise entre 1 et 5.");
         }
@@ -67,7 +67,7 @@ public class InteractionServiceImpl implements InteractionService {
 
     @Override
     @Transactional
-    public Signalement signalerLogement(Long logementId, Long utilisateurId, MotifSignalement motif, String description) {
+    public Signalement signalerLogement(Long logementId, String utilisateurId, MotifSignalement motif, String description) {
         Logement logement = logementRepository.findById(logementId)
                 .orElseThrow(() -> new ResourceNotFoundException("Logement non trouvé avec l'id : " + logementId));
 
