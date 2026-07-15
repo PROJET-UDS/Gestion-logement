@@ -14,14 +14,23 @@ import SignUp from "layouts/authentification/sign-up";
 import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
 
-import Icon from "@mui/material/Icon";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import HomeWorkIcon from "@mui/icons-material/HomeWork";
+import TableViewIcon from "@mui/icons-material/TableView";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import FormatTextdirectionRToLIcon from "@mui/icons-material/FormatTextdirectionRToL";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import PersonIcon from "@mui/icons-material/Person";
+import LoginIcon from "@mui/icons-material/Login";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import LockResetIcon from "@mui/icons-material/LockReset";
 
 const routes = [
   {
     type: "collapse",
     name: "Dashboard",
     key: "dashboard",
-    icon: <Icon fontSize="small">dashboard</Icon>,
+    icon: <DashboardIcon fontSize="small" />,
     route: "/dashboard",
     component: <Dashboard />,
   },
@@ -29,7 +38,7 @@ const routes = [
     type: "collapse",
     name: "Logements",
     key: "logements",
-    icon: <Icon fontSize="small">home_work</Icon>,
+    icon: <HomeWorkIcon fontSize="small" />,
     route: "/logements",
     component: <Logements />,
   },
@@ -37,7 +46,7 @@ const routes = [
     type: "collapse",
     name: "Tables",
     key: "tables",
-    icon: <Icon fontSize="small">table_view</Icon>,
+    icon: <TableViewIcon fontSize="small" />,
     route: "/tables",
     component: <Tables />,
   },
@@ -45,7 +54,7 @@ const routes = [
     type: "collapse",
     name: "Billing",
     key: "billing",
-    icon: <Icon fontSize="small">receipt_long</Icon>,
+    icon: <ReceiptLongIcon fontSize="small" />,
     route: "/billing",
     component: <Billing />,
   },
@@ -53,7 +62,7 @@ const routes = [
     type: "collapse",
     name: "RTL",
     key: "rtl",
-    icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
+    icon: <FormatTextdirectionRToLIcon fontSize="small" />,
     route: "/rtl",
     component: <RTL />,
   },
@@ -61,7 +70,7 @@ const routes = [
     type: "collapse",
     name: "Notifications",
     key: "notifications",
-    icon: <Icon fontSize="small">notifications</Icon>,
+    icon: <NotificationsIcon fontSize="small" />,
     route: "/notifications",
     component: <Notifications />,
   },
@@ -69,7 +78,7 @@ const routes = [
     type: "collapse",
     name: "Profile",
     key: "profile",
-    icon: <Icon fontSize="small">person</Icon>,
+    icon: <PersonIcon fontSize="small" />,
     route: "/profile",
     component: <Profile />,
   },
@@ -77,7 +86,7 @@ const routes = [
     type: "collapse",
     name: "Sign In",
     key: "sign-in",
-    icon: <Icon fontSize="small">login</Icon>,
+    icon: <LoginIcon fontSize="small" />,
     route: "/authentification/sign-in",
     component: <SignIn />,
   },
@@ -85,7 +94,7 @@ const routes = [
     type: "collapse",
     name: "Sign Up",
     key: "sign-up",
-    icon: <Icon fontSize="small">assignment</Icon>,
+    icon: <AssignmentIcon fontSize="small" />,
     route: "/authentification/sign-up",
     component: <SignUp />,
   },
@@ -93,7 +102,7 @@ const routes = [
     type: "collapse",
     name: "Reset Password",
     key: "reset-password",
-    icon: <Icon fontSize="small">lock_reset</Icon>,
+    icon: <LockResetIcon fontSize="small" />,
     route: "/authentification/reset-password",
     component: <ResetPassword />,
   },
