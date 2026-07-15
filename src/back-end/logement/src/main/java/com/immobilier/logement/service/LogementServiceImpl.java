@@ -101,7 +101,7 @@ public class LogementServiceImpl implements LogementService {
     @Override
     @Transactional(readOnly = true)
     public List<LogementResponseDTO> obtenirTousLesLogementsValides() {
-        return logementRepository.findByStatutAnnonce(StatutAnnonce.VALIDE).stream()
+        return logementRepository.findBySupprimeFalseOrSupprimeIsNull().stream()
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
