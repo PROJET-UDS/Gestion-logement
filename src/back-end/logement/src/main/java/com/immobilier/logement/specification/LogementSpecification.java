@@ -1,7 +1,6 @@
 package com.immobilier.logement.specification;
 
 import com.immobilier.logement.entity.Logement;
-import com.immobilier.logement.enums.StatutAnnonce;
 import com.immobilier.logement.enums.TypeLogement;
 import com.immobilier.logement.enums.TypeTransaction;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,7 +23,6 @@ public class LogementSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(criteriaBuilder.equal(root.get("statutAnnonce"), StatutAnnonce.VALIDE));
             predicates.add(criteriaBuilder.or(
                     criteriaBuilder.equal(root.get("supprime"), false),
                     criteriaBuilder.isNull(root.get("supprime"))
