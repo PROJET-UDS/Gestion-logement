@@ -20,7 +20,7 @@ public class Avis {
     @JoinColumn(name = "logement_id", nullable = false)
     private Logement logement;
 
-    private Long utilisateurId;
+    private String utilisateurId;
     private String nomUtilisateur;
 
     private Integer note; // Entre 1 et 5

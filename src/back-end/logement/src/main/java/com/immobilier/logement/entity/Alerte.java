@@ -22,7 +22,7 @@ public class Alerte {
 
     // L'identifiant de l'utilisateur qui attend un logement
     @Column(nullable = false)
-    private Long utilisateurId;
+    private String utilisateurId;
 
     @Column(nullable = false)
     private String ville;

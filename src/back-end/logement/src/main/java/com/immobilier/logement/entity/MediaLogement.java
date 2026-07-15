@@ -19,8 +19,11 @@ public class MediaLogement {
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
+    @Column(name = "media_type")
+    private String mediaType;
+
     @Column(name = "is_360_view", nullable = false)
-    private boolean is360View; // true si c'est une ressource de visite virtuelle 3D/360°
+    private boolean is360View;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "logement_id", nullable = false)

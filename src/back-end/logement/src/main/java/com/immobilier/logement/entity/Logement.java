@@ -1,6 +1,7 @@
 package com.immobilier.logement.entity;
 
 import com.immobilier.logement.enums.StatutAnnonce;
+import com.immobilier.logement.enums.StatutLogement;
 import com.immobilier.logement.enums.TypeLogement;
 import com.immobilier.logement.enums.TypeTransaction;
 import jakarta.persistence.*;
@@ -39,6 +40,8 @@ public class Logement {
     @Column(nullable = false)
     private String ville;
 
+    private String quartier;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type_logement", nullable = false)
     private TypeLogement typeLogement;
@@ -51,8 +54,31 @@ public class Logement {
     @Column(name = "statut_annonce", nullable = false)
     private StatutAnnonce statutAnnonce;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "statut_logement", nullable = false)
+    @Builder.Default
+    private StatutLogement statutLogement = StatutLogement.DISPONIBLE;
+
     @Column(name = "proprietaire_id", nullable = false)
-    private Long proprietaireId;
+    private String proprietaireId;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal charges;
+
+    @Column(name = "nb_pieces")
+    private Integer nbPieces;
+
+    private Double superficie;
+
+    @Column(columnDefinition = "TEXT")
+    private String equipements;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean supprime = false;
+
+    @Column(name = "date_suppression")
+    private LocalDateTime dateSuppression;
 
     @OneToMany(mappedBy = "logement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

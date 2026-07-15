@@ -12,5 +12,5 @@ public interface HistoriqueConsultationRepository extends JpaRepository<Historiq
 
     // Correction ici : Ajout du "u" à trouverDernieresConsultations
     @Query("SELECT h FROM HistoriqueConsultation h WHERE h.utilisateurId = :userId ORDER BY h.dateConsultation DESC")
-    List<HistoriqueConsultation> trouverDernieresConsultations(@Param("userId") Long utilisateurId);
+    List<HistoriqueConsultation> trouverDernieresConsultations(@Param("userId") String utilisateurId);
 }

@@ -7,27 +7,44 @@ spring:
   config:
     import: "optional:configserver:"
   datasource:
-    url: jdbc:postgresql://localhost:5432/logement_db
-    username: postgres
-    password: f
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      transaction-isolation: TRANSACTION_READ_COMMITTED
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate.format_sql: true
     show-sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+logement:
+  upload:
+    dir: ./uploads/logements
 
 eureka:
   client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -39,9 +56,8 @@ management:
       show-details: always
 
 jwt:
-  secret: mon-secret-jwt-256-bits-minimum-dschang-2026-francko
+  secret: ${JWT_SECRET}
 
-# --- CONFIGURATION SWAGGER
 springdoc:
   api-docs:
     enabled: true

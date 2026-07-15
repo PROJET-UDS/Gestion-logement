@@ -3,6 +3,7 @@ package com.immobilier.logement.controller;
 import com.immobilier.logement.entity.Avis;
 import com.immobilier.logement.entity.Signalement;
 import com.immobilier.logement.enums.MotifSignalement;
+import com.immobilier.logement.security.AuthenticatedUser;
 import com.immobilier.logement.service.InteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,20 +21,18 @@ public class InteractionController {
 
     private final InteractionService interactionService;
 
-    // 1. Ajouter un Avis
     @PostMapping("/logements/{id}/avis")
     public ResponseEntity<Avis> ajouterAvis(
             @PathVariable Long id,
-            @RequestParam Long utilisateurId,
             @RequestParam String nomUtilisateur,
             @RequestParam Integer note,
-            @RequestParam String commentaire) {
+            @RequestParam String commentaire,
+            @AuthenticationPrincipal AuthenticatedUser user) {
 
-        Avis nouvelAvis = interactionService.ajouterAvis(id, utilisateurId, nomUtilisateur, note, commentaire);
+        Avis nouvelAvis = interactionService.ajouterAvis(id, user.userId(), nomUtilisateur, note, commentaire);
         return new ResponseEntity<>(nouvelAvis, HttpStatus.CREATED);
     }
 
-    // 2. Récupérer les Avis d'un logement (PAGINÉ)
     @GetMapping("/logements/{id}/avis")
     public ResponseEntity<Page<Avis>> obtenirAvisDuLogement(
             @PathVariable Long id,
@@ -44,15 +44,14 @@ public class InteractionController {
         return ResponseEntity.ok(listeAvis);
     }
 
-    // 3. Signaler un Logement
     @PostMapping("/logements/{id}/signaler")
     public ResponseEntity<Signalement> signalerLogement(
             @PathVariable Long id,
-            @RequestParam Long utilisateurId,
             @RequestParam MotifSignalement motif,
-            @RequestParam String description) {
+            @RequestParam String description,
+            @AuthenticationPrincipal AuthenticatedUser user) {
 
-        Signalement nouveauSignalement = interactionService.signalerLogement(id, utilisateurId, motif, description);
+        Signalement nouveauSignalement = interactionService.signalerLogement(id, user.userId(), motif, description);
         return new ResponseEntity<>(nouveauSignalement, HttpStatus.CREATED);
     }
 }

@@ -21,7 +21,7 @@ public class Signalement {
     @JoinColumn(name = "logement_id", nullable = false)
     private Logement logement;
 
-    private Long utilisateurId; // ID de l'étudiant qui signale
+    private String utilisateurId;
 
     @Enumerated(EnumType.STRING)
     private MotifSignalement motif;

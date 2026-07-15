@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface LogementRepository extends JpaRepository<Logement, Long>, JpaSpecificationExecutor<Logement> {
-    List<Logement> findByProprietaireId(Long proprietaireId);
+    List<Logement> findByProprietaireId(String proprietaireId);
     List<Logement> findByStatutAnnonce(StatutAnnonce statutAnnonce);
 
     /**

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional // Sécurise les transactions d'écriture et de suppression en base de données
+@Transactional
 public class FavoriHistoriqueService {
 
     private final FavoriRepository favoriRepository;
@@ -27,21 +27,16 @@ public class FavoriHistoriqueService {
         this.logementRepository = logementRepository;
     }
 
-    // --- GESTION DES FAVORIS ---
-
-    public String basculerFavori(Long utilisateurId, Long logementId) {
+    public String basculerFavori(String utilisateurId, Long logementId) {
         Logement logement = logementRepository.findById(logementId)
                 .orElseThrow(() -> new RuntimeException("Logement introuvable"));
 
-        // On regarde si le logement est déjà dans les favoris
         var favoriExistant = favoriRepository.findByUtilisateurIdAndLogementId(utilisateurId, logementId);
 
         if (favoriExistant.isPresent()) {
-            // S'il existe, on le retire (Action de "Retirer des favoris")
             favoriRepository.delete(favoriExistant.get());
             return "Logement retiré des favoris";
         } else {
-            // S'il n'existe pas, on l'ajoute (Action de "Mettre en favori")
             Favori nouveauFavori = Favori.builder()
                     .utilisateurId(utilisateurId)
                     .logement(logement)
@@ -52,17 +47,14 @@ public class FavoriHistoriqueService {
         }
     }
 
-    public List<Favori> obtenirFavorisUtilisateur(Long utilisateurId) {
+    public List<Favori> obtenirFavorisUtilisateur(String utilisateurId) {
         return favoriRepository.findByUtilisateurIdOrderByDateAjoutDesc(utilisateurId);
     }
 
-    // --- GESTION DE L'HISTORIQUE ---
-
-    public void enregistrerConsultation(Long utilisateurId, Long logementId) {
+    public void enregistrerConsultation(String utilisateurId, Long logementId) {
         Logement logement = logementRepository.findById(logementId)
                 .orElseThrow(() -> new RuntimeException("Logement introuvable"));
 
-        // On enregistre simplement la visite
         HistoriqueConsultation historique = HistoriqueConsultation.builder()
                 .utilisateurId(utilisateurId)
                 .logement(logement)
@@ -72,8 +64,7 @@ public class FavoriHistoriqueService {
         historiqueRepository.save(historique);
     }
 
-    public List<HistoriqueConsultation> obtenirHistoriqueUtilisateur(Long utilisateurId) {
-        // Retourne les consultations de l'utilisateur
+    public List<HistoriqueConsultation> obtenirHistoriqueUtilisateur(String utilisateurId) {
         return historiqueRepository.trouverDernieresConsultations(utilisateurId);
     }
 }

@@ -6,10 +6,9 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
-public class LogementRequestDTO {
+public class LogementUpdateDTO {
 
     @NotBlank(message = "Le titre ne peut pas être vide")
     @Size(max = 150, message = "Le titre ne peut pas dépasser 150 caractères")
@@ -36,10 +35,6 @@ public class LogementRequestDTO {
 
     @NotNull(message = "Le type de transaction est obligatoire")
     private TypeTransaction typeTransaction;
-
-    private String proprietaireId;
-
-    private List<MediaDTO> medias;
 
     @DecimalMin(value = "0", message = "Les charges ne peuvent pas être négatives")
     private BigDecimal charges;

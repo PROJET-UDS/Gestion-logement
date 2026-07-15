@@ -18,7 +18,7 @@ public class HistoriqueConsultation {
     private Long id;
 
     @Column(nullable = false)
-    private Long utilisateurId;
+    private String utilisateurId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "logement_id", nullable = false)

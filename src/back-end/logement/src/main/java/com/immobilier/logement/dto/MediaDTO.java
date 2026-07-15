@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MediaDTO {
     private String fileUrl;
+    private String mediaType;
     private boolean is360View;
 }

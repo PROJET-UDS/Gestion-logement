@@ -22,7 +22,7 @@ public class Favori {
 
     // ID de l'utilisateur (provenant du microservice utilisateur / Token JWT)
     @Column(nullable = false)
-    private Long utilisateurId;
+    private String utilisateurId;
 
     // Liaison avec le logement mis en favori
     @ManyToOne(fetch = FetchType.LAZY)
