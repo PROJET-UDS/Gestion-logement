@@ -31,7 +31,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponseDTO> me(Authentication authentication) {
         JwtClaims claims = claims(authentication);
-        log.info("Consultation du profil courant : {}", claims.getUserId());
+        log.info("Consultations du profil courant : {}", claims.getUserId());
         return ResponseEntity.ok(userProfileService.getCurrentUser(claims));
     }
 
