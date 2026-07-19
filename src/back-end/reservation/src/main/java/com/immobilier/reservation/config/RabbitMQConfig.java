@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuration RabbitMQ : déclare l'exchange et les routing keys utilisés
  * pour publier les événements liés aux réservations (création, confirmation, annulation).
- * Les autres microservices (paiement, messagerie) pourront s'abonner à ces événements.
+ * Les autres microservices (payment, messagerie) pourront s'abonner à ces événements.
  */
 @Configuration
 public class RabbitMQConfig {

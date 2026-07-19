@@ -106,7 +106,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
     >
       <NotificationItem icon={<Icon>email</Icon>} title="Check new messages" />
       <NotificationItem icon={<Icon>podcasts</Icon>} title="Manage Podcast sessions" />
-      <NotificationItem icon={<Icon>shopping_cart</Icon>} title="Payment successfully completed" />
+      <NotificationItem icon={<Icon>shopping_cart</Icon>} title="payment successfully completed" />
     </Menu>
   );
 

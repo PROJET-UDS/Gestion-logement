@@ -27,6 +27,11 @@ public class AuthUser {
     @Builder.Default
     private boolean actif = true;
 
+    @Column(length = 512)
+    private String refreshToken;
+
+    private Instant refreshTokenExpiry;
+
     private Instant createdAt;
 
     @PrePersist

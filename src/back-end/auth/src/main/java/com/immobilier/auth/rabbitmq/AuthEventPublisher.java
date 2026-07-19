@@ -1,4 +1,4 @@
-package com.immobilier.auth.messaging;
+package com.immobilier.auth.rabbitmq;
 
 import com.immobilier.auth.config.RabbitMQConfig;
 import com.immobilier.shared.events.UserRoleChangedEvent;

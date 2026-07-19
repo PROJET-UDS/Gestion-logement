@@ -52,8 +52,8 @@ SELECT 'CREATE DATABASE logement_db OWNER immobilier'
  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'logement_db')\gexec
 SELECT 'CREATE DATABASE reservation_db OWNER immobilier'
  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'reservation_db')\gexec
-SELECT 'CREATE DATABASE paiement_db OWNER immobilier'
- WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'paiement_db')\gexec
+SELECT 'CREATE DATABASE payment_db OWNER immobilier'
+ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_db')\gexec
 SELECT 'CREATE DATABASE messagerie_db OWNER immobilier'
  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'messagerie_db')\gexec
 SQL
@@ -94,7 +94,7 @@ ENV_AUTH="DB_URL=jdbc:postgresql://localhost:5433/auth_db $ENV_COMMON"
 ENV_USER="DB_URL=jdbc:postgresql://localhost:5433/user_db $ENV_COMMON"
 ENV_LOGEMENT="DB_URL=jdbc:postgresql://localhost:5433/logement_db $ENV_COMMON"
 ENV_RESERVATION="DB_URL=jdbc:postgresql://localhost:5433/reservation_db $ENV_COMMON"
-ENV_PAIEMENT="DB_URL=jdbc:postgresql://localhost:5433/paiement_db $ENV_COMMON"
+ENV_paiement="DB_URL=jdbc:postgresql://localhost:5433/payment_db $ENV_COMMON"
 ENV_MESSAGERIE="DB_URL=jdbc:postgresql://localhost:5433/messagerie_db $ENV_COMMON"
 ENV_GATEWAY="EUREKA_URL=http://localhost:8761/eureka/"
 
@@ -116,7 +116,7 @@ sleep 5
 start_svc user     8082 "$ENV_USER"
 start_svc logement 8083 "$ENV_LOGEMENT"
 start_svc reservation 8084 "$ENV_RESERVATION"
-start_svc paiement 8085 "$ENV_PAIEMENT"
+start_svc paiement 8085 "$ENV_paiement"
 start_svc messagerie 8086 "$ENV_MESSAGERIE"
 sleep 3
 start_svc gateway  8089 "$ENV_GATEWAY"
@@ -146,7 +146,7 @@ check_svc "Auth"       "auth"         "http://localhost:8081/actuator/health"
 check_svc "User"       "user"         "http://localhost:8082/actuator/health"
 check_svc "Logement"   "logement"     "http://localhost:8083/actuator/health"
 check_svc "Réservation" "reservation" "http://localhost:8084/actuator/health"
-check_svc "Paiement"   "paiement"     "http://localhost:8085/actuator/health"
+check_svc "Paiement"  "paiement"    "http://localhost:8085/actuator/health"
 check_svc "Messagerie" "messagerie"   "http://localhost:8086/actuator/health"
 check_svc "Gateway"    "gateway"      "http://localhost:8089/actuator/health"
 

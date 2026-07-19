@@ -31,7 +31,7 @@ import visaLogo from "assets/images/logos/visa.png";
 // Material Dashboard 2 React context
 import { useMaterialUIController } from "context";
 
-function PaymentMethod() {
+function paymentMethod() {
   const [controller] = useMaterialUIController();
   const { darkMode } = controller;
 
@@ -39,7 +39,7 @@ function PaymentMethod() {
     <Card id="delete-account">
       <MDBox pt={2} px={2} display="flex" justifyContent="space-between" alignItems="center">
         <MDTypography variant="h6" fontWeight="medium">
-          Payment Method
+          payment Method
         </MDTypography>
         <MDButton variant="gradient" color="dark">
           <Icon sx={{ fontWeight: "bold" }}>add</Icon>
@@ -104,4 +104,4 @@ function PaymentMethod() {
   );
 }
 
-export default PaymentMethod;
+export default paymentMethod;

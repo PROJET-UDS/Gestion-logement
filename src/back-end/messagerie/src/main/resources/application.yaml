@@ -41,4 +41,4 @@ management:
       show-details: always
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}

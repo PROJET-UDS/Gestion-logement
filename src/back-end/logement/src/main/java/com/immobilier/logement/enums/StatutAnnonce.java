@@ -5,5 +5,7 @@ public enum StatutAnnonce {
     VALIDE,
     REJETE,
     LOUE,
-    SUSPENDU, VENDU
+    SUSPENDU,
+    VENDU,
+    RESERVE
 }

@@ -22,7 +22,7 @@ public class PaymentRequestDTO {
     @Positive(message = "Le montant doit être positif")
     private Double amount;
 
-    @NotNull(message = "Le moyen de paiement est obligatoire")
+    @NotNull(message = "Le moyen de payment est obligatoire")
     private PaymentProvider provider;
 
     @NotNull(message = "Le numéro de téléphone est obligatoire")

@@ -1,15 +1,11 @@
 package com.immobilier.reservation.event;
+
 import com.immobilier.reservation.config.RabbitMQConfig;
 import com.immobilier.reservation.entity.Reservation;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * Publie les événements liés au cycle de vie d'une réservation sur RabbitMQ.
- * D'autres microservices (paiement, messagerie) pourront s'abonner à ces
- * routing keys pour réagir (ex: envoyer un email de confirmation).
- */
 @Component
 public class ReservationEventPublisher {
 
@@ -54,9 +50,11 @@ public class ReservationEventPublisher {
                 r.getClientId(),
                 r.getDateDebut(),
                 r.getDateFin(),
-                r.getPrixTotal(),
-                r.getStatut()
+                r.getPrixLogement(),
+                r.getMontantReservation(),
+                r.getMontantRestant(),
+                r.getStatut(),
+                r.getPaymentStatut()
         );
     }
 }
-

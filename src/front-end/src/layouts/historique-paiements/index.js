@@ -21,19 +21,19 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
-// Service API paiement
-import { getHistoriquePaiements } from "api/paiementApi";
+// Service API payment
+import { getHistoriquepayments } from "api/paymentApi";
 
-function HistoriquePaiements() {
-  const [paiements, setPaiements] = useState([]);
+function Historiquepayments() {
+  const [payments, setpayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
 
   useEffect(() => {
     const fetchHistorique = async () => {
       try {
-        const response = await getHistoriquePaiements();
-        setPaiements(response.data);
+        const response = await getHistoriquepayments();
+        setpayments(response.data);
         setErreur(null);
       } catch (error) {
         setErreur(
@@ -56,7 +56,7 @@ function HistoriquePaiements() {
             <Card>
               <MDBox p={3}>
                 <MDTypography variant="h5" fontWeight="medium" mb={3}>
-                  Historique des paiements
+                  Historique des payments
                 </MDTypography>
 
                 {erreur && (
@@ -83,14 +83,14 @@ function HistoriquePaiements() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {paiements.length === 0 ? (
+                          {payments.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} align="center">
-                                Aucun paiement trouvé.
+                                Aucun payment trouvé.
                               </TableCell>
                             </TableRow>
                           ) : (
-                            paiements.map((p) => (
+                            payments.map((p) => (
                               <TableRow key={p.id}>
                                 <TableCell>{p.id}</TableCell>
                                 <TableCell>{p.montant}</TableCell>
@@ -115,4 +115,4 @@ function HistoriquePaiements() {
   );
 }
 
-export default HistoriquePaiements;
+export default Historiquepayments;

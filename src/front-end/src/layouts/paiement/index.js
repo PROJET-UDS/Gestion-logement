@@ -16,14 +16,14 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
-// Service API paiement
-import { creerPaiement } from "api/paiementApi";
+// Service API payment
+import { creerpayment } from "api/paymentApi";
 
-function Paiement() {
+function payment() {
   const [formData, setFormData] = useState({
     montant: "",
     devise: "XAF",
-    moyenPaiement: "MOBILE_MONEY",
+    moyenpayment: "MOBILE_MONEY",
     reservationId: "",
   });
 
@@ -58,13 +58,13 @@ const handleSubmit = async (e) => {
   setStatut(null);
 
   try {
-    const response = await creerPaiement(formData);
+    const response = await creerpayment(formData);
     setStatut("success");
-    setMessage(`Paiement créé avec succès ! ID: ${response.data.id}`);
+    setMessage(`payment créé avec succès ! ID: ${response.data.id}`);
   } catch (error) {
     setStatut("error");
     setMessage(
-      "Erreur lors de la création du paiement. Le backend n'est peut-être pas encore disponible."
+      "Erreur lors de la création du payment. Le backend n'est peut-être pas encore disponible."
     );
   } finally {
     setLoading(false);
@@ -80,7 +80,7 @@ const handleSubmit = async (e) => {
             <Card>
               <MDBox p={3}>
                 <MDTypography variant="h5" fontWeight="medium" mb={3}>
-                  Nouveau paiement
+                  Nouveau payment
                 </MDTypography>
 
                 {statut && (
@@ -119,9 +119,9 @@ const handleSubmit = async (e) => {
                   <MDBox mb={2}>
                     <MDInput
                       type="text"
-                      label="Moyen de paiement"
-                      name="moyenPaiement"
-                      value={formData.moyenPaiement}
+                      label="Moyen de payment"
+                      name="moyenpayment"
+                      value={formData.moyenpayment}
                       onChange={handleChange}
                       fullWidth
                       required
@@ -161,4 +161,4 @@ const handleSubmit = async (e) => {
   );
 }
 
-export default Paiement;
+export default payment;

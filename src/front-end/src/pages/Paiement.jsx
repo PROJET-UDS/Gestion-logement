@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { CreditCard, CheckCircle, ArrowLeft, Lock, AlertCircle, Info } from 'lucide-react'
 import { reservations } from '../data/data'
 
-const moyensPaiement = [
+const moyenspayment = [
   {
     id: 'orange',
     name: 'Orange Money',
@@ -11,7 +11,7 @@ const moyensPaiement = [
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-300',
     emoji: '📱',
-    description: 'Paiement instantané via Orange Money'
+    description: 'payment instantané via Orange Money'
   },
   {
     id: 'mtn',
@@ -20,7 +20,7 @@ const moyensPaiement = [
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-400',
     emoji: '📱',
-    description: 'Paiement via MTN Mobile Money'
+    description: 'payment via MTN Mobile Money'
   },
   {
     id: 'wave',
@@ -29,7 +29,7 @@ const moyensPaiement = [
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-400',
     emoji: '📱',
-    description: 'Paiement rapide avec Wave'
+    description: 'payment rapide avec Wave'
   },
   {
     id: 'cv',
@@ -38,11 +38,11 @@ const moyensPaiement = [
     bgColor: 'bg-gray-50',
     borderColor: 'border-gray-300',
     emoji: '💳',
-    description: 'Paiement sécurisé par carte bancaire'
+    description: 'payment sécurisé par carte bancaire'
   }
 ]
 
-export default function Paiement() {
+export default function payment() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [selectedMoyen, setSelectedMoyen] = useState('orange')
@@ -62,9 +62,9 @@ export default function Paiement() {
     total: 3500
   }
 
-  const moyenConfig = moyensPaiement.find(m => m.id === selectedMoyen)
+  const moyenConfig = moyenspayment.find(m => m.id === selectedMoyen)
 
-  const handlePayment = () => {
+  const handlepayment = () => {
     if (!phoneNumber || phoneNumber.length < 9) {
       setError('Veuillez entrer un numéro de téléphone valide')
       return
@@ -85,7 +85,7 @@ export default function Paiement() {
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle size={48} className="text-green-600" />
         </div>
-        <h2 className="text-3xl font-bold text-black mb-4">Paiement confirmé !</h2>
+        <h2 className="text-3xl font-bold text-black mb-4">payment confirmé !</h2>
         <p className="text-gray-600 mb-2">
           Votre réservation est <strong>confirmée</strong>. Le propriétaire a été notifié.
         </p>
@@ -148,7 +148,7 @@ export default function Paiement() {
         Annuler
       </button>
 
-      <h2 className="text-3xl font-bold text-black mb-2">Paiement sécurisé</h2>
+      <h2 className="text-3xl font-bold text-black mb-2">payment sécurisé</h2>
       <p className="text-gray-600 mb-8">Finalisez votre réservation en toute sécurité</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -189,7 +189,7 @@ export default function Paiement() {
           <div className="card">
             <div className="flex items-center gap-2 text-gray-500 text-sm mb-3">
               <Lock size={16} />
-              <span>Paiement 100% sécurisé</span>
+              <span>payment 100% sécurisé</span>
             </div>
             <div className="space-y-2 text-sm text-gray-600">
               <p>• Vos informations sont chiffrées</p>
@@ -201,9 +201,9 @@ export default function Paiement() {
 
         <div>
           <div className="card mb-6">
-            <h3 className="font-semibold text-black mb-4">Mode de paiement</h3>
+            <h3 className="font-semibold text-black mb-4">Mode de payment</h3>
             <div className="space-y-3">
-              {moyensPaiement.map((moyen) => (
+              {moyenspayment.map((moyen) => (
                 <button
                   key={moyen.id}
                   onClick={() => setSelectedMoyen(moyen.id)}
@@ -259,7 +259,7 @@ export default function Paiement() {
           </div>
 
           <button
-            onClick={handlePayment}
+            onClick={handlepayment}
             disabled={!phoneNumber || isProcessing}
             className={`w-full py-4 rounded-lg font-semibold text-lg transition-all flex items-center justify-center gap-2 ${
               phoneNumber && !isProcessing
@@ -285,7 +285,7 @@ export default function Paiement() {
 
           <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <Lock size={12} /> Paiement sécurisé SSL
+              <Lock size={12} /> payment sécurisé SSL
             </span>
           </div>
         </div>

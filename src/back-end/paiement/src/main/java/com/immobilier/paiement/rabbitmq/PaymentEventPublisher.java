@@ -13,12 +13,12 @@ public class PaymentEventPublisher {
     private final RabbitTemplate rabbitTemplate;
 
     public void publishPaymentEvent(PaymentEventDTO event) {
-        log.info("Publication d'un événement paiement : {}", event.getTransactionRef());
+        log.info("Publication d'un événement payment : {}", event.getTransactionRef());
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.PAYMENT_EXCHANGE,
                 RabbitMQConfig.PAYMENT_ROUTING_KEY,
                 event
         );
-        log.info("Événement publié avec succès pour le paiement : {}", event.getPaymentId());
+        log.info("Événement publié avec succès pour le payment : {}", event.getPaymentId());
     }
 }

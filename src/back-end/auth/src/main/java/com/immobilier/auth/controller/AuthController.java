@@ -2,6 +2,7 @@ package com.immobilier.auth.controller;
 
 import com.immobilier.auth.dto.*;
 import com.immobilier.auth.service.AuthService;
+import com.immobilier.auth.service.PasswordResetService;
 import com.immobilier.shared.dto.JwtClaims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,22 +11,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Contrôleur d'authentification
- * Gère l'enregistrement, la connexion, le refresh token et la validation des tokens
- */
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Permet au Front-End (React/Angular) de contacter ce service sans blocage CORS
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
-    /**
-     * Enregistrer un nouvel utilisateur
-     */
     @PostMapping("/register")
     public ResponseEntity<TokenResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         log.info("Enregistrement d'un nouvel utilisateur : {}", request.getEmail());
@@ -33,9 +30,6 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Connexion d'un utilisateur
-     */
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
         log.info("Connexion de l'utilisateur : {}", request.getEmail());
@@ -43,9 +37,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Rafraîchir le token d'accès
-     */
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponseDTO> refresh(@Valid @RequestBody RefreshRequestDTO request) {
         log.info("Rafraîchissement du token");
@@ -53,9 +44,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Valider un token
-     */
     @PostMapping("/validate")
     public ResponseEntity<JwtClaims> validate(@Valid @RequestBody ValidateTokenRequestDTO request) {
         log.info("Validation d'un token");
@@ -63,9 +51,45 @@ public class AuthController {
         return ResponseEntity.ok(claims);
     }
 
-    /**
-     * Endpoint de santé pour les checks de service
-     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDTO request) {
+        log.info("Demande de reinitialisation pour : {}", request.getEmail());
+        passwordResetService.envoyerCode(request.getEmail());
+        return ResponseEntity.ok(Map.of(
+            "message", "Un code de recuperation a ete envoye a votre adresse email"
+        ));
+    }
+
+    @PostMapping("/forgot-password/resend")
+    public ResponseEntity<Map<String, String>> resendCode(
+            @Valid @RequestBody ForgotPasswordRequestDTO request) {
+        log.info("Renvoi du code de recuperation pour : {}", request.getEmail());
+        passwordResetService.renvoyerCode(request.getEmail());
+        return ResponseEntity.ok(Map.of(
+            "message", "Un nouveau code a ete envoye a votre adresse email"
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDTO request) {
+        log.info("Reinitialisation du mot de passe pour : {}", request.getEmail());
+        passwordResetService.reinitialiserMotDePasse(
+            request.getEmail(), request.getCode(), request.getNewPassword()
+        );
+        return ResponseEntity.ok(Map.of(
+            "message", "Votre mot de passe a ete reinitialise avec succes"
+        ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestBody(required = false) RefreshRequestDTO request) {
+        log.info("Deconnexion demandee");
+        authService.logout(request != null ? request : new RefreshRequestDTO());
+        return ResponseEntity.ok(Map.of("message", "Deconnexion reussie"));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Auth service is running");

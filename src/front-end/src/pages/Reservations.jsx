@@ -136,7 +136,7 @@ export default function Reservations() {
                 <div className="flex items-center gap-2 lg:flex-col lg:items-end">
                   {reservation.statut === 'confirmee' && (
                     <Link
-                      to={`/paiement/${reservation.id}`}
+                      to={`/payment/${reservation.id}`}
                       className="btn-primary text-sm px-4 py-2"
                     >
                       Payer maintenant

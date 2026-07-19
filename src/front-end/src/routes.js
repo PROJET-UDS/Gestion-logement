@@ -45,7 +45,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Paiements",
+    name: "payments",
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/billing",

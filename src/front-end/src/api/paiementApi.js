@@ -1,21 +1,55 @@
-import axios from "axios";
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  "http://localhost:8089";
 
-const API_BASE_URL = "http://localhost:8089/paiements";
+import { authHeaders } from "services/authService";
 
-const paiementApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
+async function apiRequest(path, options = {}) {
+  const headers = {
     "Content-Type": "application/json",
-  },
-});
+    ...authHeaders(),
+    ...options.headers,
+  };
 
-// Créer un nouveau paiement
-export const creerPaiement = (data) => paiementApi.post("/", data);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
 
-// Récupérer le statut d'un paiement par son id
-export const getStatutPaiement = (id) => paiementApi.get(`/${id}`);
+  if (!response.ok) {
+    const contentType = response.headers.get("content-type") || "";
+    let errorData = null;
+    if (contentType.includes("application/json")) {
+      errorData = await response.json();
+    }
+    throw new Error(errorData?.message || `Erreur HTTP ${response.status}`);
+  }
 
-// Récupérer l'historique des paiements
-export const getHistoriquePaiements = () => paiementApi.get("/");
+  if (response.status === 204) return null;
+  return response.json();
+}
 
-export default paiementApi;
+export async function initierPaiement(data) {
+  return apiRequest("/api/payments/initiate", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getPaiementById(id) {
+  return apiRequest(`/api/payments/${id}`);
+}
+
+export async function getPaiementsParReservation(reservationId) {
+  return apiRequest(`/api/payments/reservation/${reservationId}`);
+}
+
+export async function getPaiementsParUser(userId) {
+  return apiRequest(`/api/payments/user/${userId}`);
+}
+
+export async function updatePaiementStatus(id, status) {
+  return apiRequest(`/api/payments/${id}/status?status=${encodeURIComponent(status)}`, {
+    method: "PUT",
+  });
+}

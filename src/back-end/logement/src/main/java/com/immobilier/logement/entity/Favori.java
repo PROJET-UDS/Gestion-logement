@@ -30,5 +30,6 @@ public class Favori {
     private Logement logement;
 
     @Column(nullable = false)
+    @Builder.Default
     private LocalDateTime dateAjout = LocalDateTime.now();
 }

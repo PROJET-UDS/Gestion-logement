@@ -16,7 +16,7 @@
 | user       | 8082 | Gestion des utilisateurs et demandes |
 | logement   | 8083 | Gestion des logements |
 | reservation | 8084 | Gestion des réservations |
-| paiement   | 8085 | Gestion des paiements, abonnements |
+| payment   | 8085 | Gestion des payments, abonnements |
 | messagerie | 8086 | Messagerie interne |
 
 ---
@@ -39,10 +39,10 @@ sh start-backend.sh
 
 Le script :
 1. Démarre PostgreSQL (port hôte **5433**) et RabbitMQ
-2. Crée les bases de données (`auth_db`, `user_db`, `logement_db`, `reservation_db`, `paiement_db`, `messagerie_db`)
+2. Crée les bases de données (`auth_db`, `user_db`, `logement_db`, `reservation_db`, `payment_db`, `messagerie_db`)
 3. Compile et installe tous les modules Maven
 4. Démarre Eureka (discover) en premier
-5. Démarre les services métier dans l'ordre (auth → user, logement, reservation, paiement, messagerie → gateway)
+5. Démarre les services métier dans l'ordre (auth → user, logement, reservation, payment, messagerie → gateway)
 6. Vérifie que chaque service répond
 
 ### Frontend
@@ -91,7 +91,7 @@ tail -f /tmp/auth.log        # Authentification
 tail -f /tmp/user.log        # Utilisateurs
 tail -f /tmp/logement.log    # Logements
 tail -f /tmp/reservation.log # Réservations
-tail -f /tmp/paiement.log    # Paiements
+tail -f /tmp/payment.log    # payments
 tail -f /tmp/messagerie.log  # Messagerie
 tail -f /tmp/gateway.log     # Gateway
 ```

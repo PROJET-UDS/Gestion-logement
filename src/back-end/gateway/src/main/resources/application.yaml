@@ -44,10 +44,10 @@ spring:
           predicates:
             - Path=/api/reservations/**,/reservations/**
 
-        - id: paiement
-          uri: lb://paiement
+        - id: payment
+          uri: lb://payment
           predicates:
-            - Path=/paiements/**,/abonnements/**,/reversements/**,/webhooks/**
+            - Path=/payments/**,/api/payments/**,/abonnements/**,/reversements/**,/webhooks/**
 
         - id: messagerie
           uri: lb://messagerie

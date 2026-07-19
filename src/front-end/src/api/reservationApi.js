@@ -41,3 +41,30 @@ export async function annulerReservation(id) {
   }
   return response.json();
 }
+
+export async function payerLeReste(id, methode) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/${id}/payer-le-reste?methodepayment=${encodeURIComponent(methode)}`,
+    {
+      method: "POST",
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors du paiement du reste");
+  }
+  return response.json();
+}
+
+export async function rembourserReservation(id) {
+  const response = await fetch(`${API_BASE_URL}/api/reservations/${id}/rembourser`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors du remboursement");
+  }
+  return response.json();
+}

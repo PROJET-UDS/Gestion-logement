@@ -42,6 +42,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # MailHog (email dev)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - immobilier-net
+
   # Auth
   auth:
     build: ./src/back-end/auth
@@ -52,16 +62,23 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/auth_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier
       RABBITMQ_PASSWORD: secret
       EUREKA_URL: http://discover:8761/eureka/
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
     depends_on:
       postgres:
         condition: service_started
       rabbitmq:
+        condition: service_started
+      mailhog:
         condition: service_started
       discover:
         condition: service_healthy
@@ -73,7 +90,7 @@ services:
     build: ./src/back-end/gateway
     container_name: gateway
     ports:
-      - "8080:8080"
+      - "8080:8089"
     environment:
       EUREKA_URL: http://discover:8761/eureka/
     depends_on:
@@ -92,7 +109,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/user_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier
@@ -116,7 +133,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/logement_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier
@@ -140,7 +157,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/reservation_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier
@@ -154,17 +171,17 @@ services:
     networks:
       - immobilier-net
 
-  # Paiement
-  paiement:
+  # paiement
+  payment:
     build: ./src/back-end/paiement
-    container_name: paiement
+    container_name: payment
     ports:
       - "8085:8085"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/paiement_db
+      DB_URL: jdbc:postgresql://postgres:5432/payment_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier
@@ -188,7 +205,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/messagerie_db
       DB_USERNAME: immobilier
       DB_PASSWORD: secret
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:-cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: immobilier

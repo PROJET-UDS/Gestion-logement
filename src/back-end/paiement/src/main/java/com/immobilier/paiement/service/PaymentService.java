@@ -31,9 +31,8 @@ public class PaymentService {
         payment.setTransactionRef(generateTransactionRef());
         Payment savedPayment = paymentRepository.save(payment);
 
-        // Publier l'événement dans RabbitMQ
         paymentEventPublisher.publishPaymentEvent(buildEvent(savedPayment));
-        log.info("Paiement initié : {}", savedPayment.getTransactionRef());
+        log.info("Payment initié : {}", savedPayment.getTransactionRef());
 
         return paymentMapper.toResponseDTO(savedPayment);
     }
@@ -64,9 +63,8 @@ public class PaymentService {
         payment.setStatus(newStatus);
         Payment updatedPayment = paymentRepository.save(payment);
 
-        // Publier l'événement de mise à jour dans RabbitMQ
         paymentEventPublisher.publishPaymentEvent(buildEvent(updatedPayment));
-        log.info("Statut paiement mis à jour : {} -> {}", updatedPayment.getTransactionRef(), newStatus);
+        log.info("Statut payment mis à jour : {} -> {}", updatedPayment.getTransactionRef(), newStatus);
 
         return paymentMapper.toResponseDTO(updatedPayment);
     }

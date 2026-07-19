@@ -27,7 +27,7 @@ import MasterCard from "examples/Cards/MasterCard";
 import DefaultInfoCard from "examples/Cards/InfoCards/DefaultInfoCard";
 
 // Billing page components
-import PaymentMethod from "layouts/billing/components/PaymentMethod";
+import paymentMethod from "layouts/billing/components/paymentMethod";
 import Invoices from "layouts/billing/components/Invoices";
 import BillingInformation from "layouts/billing/components/BillingInformation";
 import Transactions from "layouts/billing/components/Transactions";
@@ -56,12 +56,12 @@ function Billing() {
                   <DefaultInfoCard
                     icon="paypal"
                     title="paypal"
-                    description="Freelance Payment"
+                    description="Freelance payment"
                     value="$455.00"
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <PaymentMethod />
+                  <paymentMethod />
                 </Grid>
               </Grid>
             </Grid>

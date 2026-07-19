@@ -1,21 +1,34 @@
 package com.immobilier.reservation.mapper;
 
-
 import com.immobilier.reservation.dto.ReservationResponseDTO;
 import com.immobilier.reservation.entity.Reservation;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper MapStruct : convertit automatiquement Reservation (entité) en ReservationResponseDTO.
- * logementTitre et clientNom sont ignorés ici (ils seront remplis plus tard via les
- * microservices logement/user, à l'ajout de Feign lors de la fusion).
- */
-@Mapper(componentModel = "spring")
-public interface ReservationMapper {
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
-    @Mapping(target = "logementTitre", ignore = true)
-    @Mapping(target = "clientNom", ignore = true)
-    ReservationResponseDTO toResponseDTO(Reservation reservation);
+@Component
+public class ReservationMapper {
+
+    public ReservationResponseDTO toResponseDTO(Reservation reservation) {
+        ReservationResponseDTO dto = new ReservationResponseDTO();
+        dto.setId(reservation.getId());
+        dto.setLogementId(reservation.getLogementId());
+        dto.setClientId(reservation.getClientId());
+        dto.setDateDebut(reservation.getDateDebut());
+        dto.setDateFin(reservation.getDateFin());
+        dto.setPrixLogement(reservation.getPrixLogement());
+        dto.setMontantReservation(reservation.getMontantReservation());
+        dto.setMontantRestant(reservation.getMontantRestant());
+        dto.setStatut(reservation.getStatut());
+        dto.setPaymentStatut(reservation.getPaymentStatut());
+        dto.setMethodepayment(reservation.getMethodepayment());
+        dto.setDateCreation(reservation.getDateCreation());
+        dto.setDatepayment(reservation.getDatepayment());
+
+        long joursRestants = ChronoUnit.DAYS.between(LocalDate.now(), reservation.getDateFin());
+        dto.setJoursRestants(Math.max(0, joursRestants));
+
+        return dto;
+    }
 }
-

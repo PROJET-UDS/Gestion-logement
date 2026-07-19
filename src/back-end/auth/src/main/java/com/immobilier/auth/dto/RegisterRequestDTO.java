@@ -10,8 +10,12 @@ public class RegisterRequestDTO {
     @Email(message = "Format email invalide")
     private String email;
 
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(min = 2, max = 120, message = "Le nom doit contenir entre 2 et 120 caracteres")
+    private String nom;
+
     @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, message = "Minimum 8 caractÃ¨res")
+    @Size(min = 8, message = "Minimum 8 caracteres")
     private String password;
 
     private UserRole role;

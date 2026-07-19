@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Search, MapPin, Bed, Bath, Square, Calendar, Filter, Home as HomeIcon, Building2, Warehouse } from 'lucide-react'
 import { annonces } from '../data/data'
+import { isAuthenticated } from 'services/authService'
+import ReservationForm from 'components/ReservationForm'
+
+const prixFormat = (v) => new Intl.NumberFormat("fr-CM").format(v)
 
 const typeIcons = {
   villa: HomeIcon,
@@ -18,6 +21,16 @@ export default function Home() {
   const [filtreType, setFiltreType] = useState('tous')
   const [filtreVille, setFiltreVille] = useState('tous')
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedAnnonce, setSelectedAnnonce] = useState(null)
+  const [reservationSuccess, setReservationSuccess] = useState(false)
+
+  const handleReserver = (annonce) => {
+    if (!isAuthenticated()) {
+      window.location.href = '/authentification/sign-in'
+      return
+    }
+    setSelectedAnnonce(annonce)
+  }
 
   const filteredAnnonces = annonces.filter(a => {
     const matchSearch = a.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,8 +43,6 @@ export default function Home() {
     const matchVille = filtreVille === 'tous' || a.localisation.includes(filtreVille)
     return matchSearch && matchPrix && matchType && matchVille
   })
-
-  const prixFormat = (prix) => new Intl.NumberFormat('fr-CM').format(prix)
 
   return (
     <div>
@@ -105,6 +116,7 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAnnonces.map((annonce) => {
           const TypeIcon = typeIcons[annonce.type] || HomeIcon
+          const montantReservation = Math.round(annonce.prix * 0.1)
           return (
             <div key={annonce.id} className="card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="relative">
@@ -139,17 +151,23 @@ export default function Home() {
               </div>
 
               <div className="border-t pt-4">
-                <p className="text-2xl font-bold text-primary mb-3">{prixFormat(annonce.prix)} <span className="text-sm font-normal text-gray-500">FCFA/mois</span></p>
+                <p className="text-2xl font-bold text-primary mb-1">{prixFormat(annonce.prix)} <span className="text-sm font-normal text-gray-500">FCFA/mois</span></p>
+                <p className="text-xs text-orange-600 mb-3 font-medium">
+                  Dépôt réservation : {prixFormat(montantReservation)} FCFA (10%)
+                </p>
                 <p className="text-xs text-gray-500 mb-3">Propriétaire: {annonce.proprietaire.nom}</p>
 
                 <div className="flex gap-2">
-                  <Link to={`/annonces/${annonce.id}`} className="btn-primary flex-1 text-center text-sm py-2">
-                    Voir détails
-                  </Link>
-                  <Link to={`/reservations/nouvelle/${annonce.id}`} className="btn-secondary flex-1 text-center text-sm py-2">
+                  <button
+                    onClick={() => handleReserver(annonce)}
+                    className="flex-1 text-center text-sm py-2 px-4 rounded-lg font-semibold text-white transition-all duration-200"
+                    style={{ backgroundColor: '#059669' }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#047857'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#059669'}
+                  >
                     <Calendar size={16} className="inline mr-1" />
-                    Visiter
-                  </Link>
+                    Réserver
+                  </button>
                 </div>
               </div>
             </div>
@@ -163,6 +181,25 @@ export default function Home() {
           <h3 className="text-xl font-semibold text-black mb-2">Aucun logement trouvé</h3>
           <p className="text-gray-500">Essayez de modifier vos critères de recherche</p>
         </div>
+      )}
+
+      {selectedAnnonce && (
+        <ReservationForm
+          logement={{
+            id: selectedAnnonce.id,
+            titre: selectedAnnonce.titre,
+            prix: selectedAnnonce.prix,
+            adresse: selectedAnnonce.localisation,
+            ville: "",
+            typeTransaction: "LOCATION",
+            image: selectedAnnonce.image,
+          }}
+          onSuccess={() => {
+            setReservationSuccess(true)
+            setSelectedAnnonce(null)
+          }}
+          onClose={() => setSelectedAnnonce(null)}
+        />
       )}
     </div>
   )
