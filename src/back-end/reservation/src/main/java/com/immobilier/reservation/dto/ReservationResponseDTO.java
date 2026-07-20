@@ -1,5 +1,6 @@
 package com.immobilier.reservation.dto;
 
+import com.immobilier.reservation.entity.PaymentStatut;
 import com.immobilier.reservation.entity.StatutReservation;
 
 import java.math.BigDecimal;
@@ -11,114 +12,80 @@ public class ReservationResponseDTO {
     private Long id;
     private Long logementId;
     private String logementTitre;
+    private String logementAdresse;
     private String clientId;
     private String clientNom;
+    private String proprietaireId;
     private LocalDate dateDebut;
     private LocalDate dateFin;
-    private BigDecimal prixTotal;
+    private BigDecimal prixLogement;
+    private BigDecimal montantReservation;
+    private BigDecimal montantRestant;
     private StatutReservation statut;
+    private PaymentStatut paymentStatut;
+    private String methodepayment;
+    private String phoneNumber;
     private LocalDateTime dateCreation;
+    private LocalDateTime datepayment;
+    private Long joursRestants;
 
     public ReservationResponseDTO() {
     }
 
-    public ReservationResponseDTO(Long id, Long logementId, String logementTitre,
-                                  String clientId, String clientNom,
-                                  LocalDate dateDebut, LocalDate dateFin,
-                                  BigDecimal prixTotal, StatutReservation statut,
-                                  LocalDateTime dateCreation) {
-        this.id = id;
-        this.logementId = logementId;
-        this.logementTitre = logementTitre;
-        this.clientId = clientId;
-        this.clientNom = clientNom;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
-        this.prixTotal = prixTotal;
-        this.statut = statut;
-        this.dateCreation = dateCreation;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    // Getters et Setters
+    public Long getLogementId() { return logementId; }
+    public void setLogementId(Long logementId) { this.logementId = logementId; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getLogementTitre() { return logementTitre; }
+    public void setLogementTitre(String logementTitre) { this.logementTitre = logementTitre; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getLogementAdresse() { return logementAdresse; }
+    public void setLogementAdresse(String logementAdresse) { this.logementAdresse = logementAdresse; }
 
-    public Long getLogementId() {
-        return logementId;
-    }
+    public String getClientId() { return clientId; }
+    public void setClientId(String clientId) { this.clientId = clientId; }
 
-    public void setLogementId(Long logementId) {
-        this.logementId = logementId;
-    }
+    public String getClientNom() { return clientNom; }
+    public void setClientNom(String clientNom) { this.clientNom = clientNom; }
 
-    public String getLogementTitre() {
-        return logementTitre;
-    }
+    public String getProprietaireId() { return proprietaireId; }
+    public void setProprietaireId(String proprietaireId) { this.proprietaireId = proprietaireId; }
 
-    public void setLogementTitre(String logementTitre) {
-        this.logementTitre = logementTitre;
-    }
+    public LocalDate getDateDebut() { return dateDebut; }
+    public void setDateDebut(LocalDate dateDebut) { this.dateDebut = dateDebut; }
 
-    public String getClientId() {
-        return clientId;
-    }
+    public LocalDate getDateFin() { return dateFin; }
+    public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
 
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
+    public BigDecimal getPrixLogement() { return prixLogement; }
+    public void setPrixLogement(BigDecimal prixLogement) { this.prixLogement = prixLogement; }
 
-    public String getClientNom() {
-        return clientNom;
-    }
+    public BigDecimal getMontantReservation() { return montantReservation; }
+    public void setMontantReservation(BigDecimal montantReservation) { this.montantReservation = montantReservation; }
 
-    public void setClientNom(String clientNom) {
-        this.clientNom = clientNom;
-    }
+    public BigDecimal getMontantRestant() { return montantRestant; }
+    public void setMontantRestant(BigDecimal montantRestant) { this.montantRestant = montantRestant; }
 
-    public LocalDate getDateDebut() {
-        return dateDebut;
-    }
+    public StatutReservation getStatut() { return statut; }
+    public void setStatut(StatutReservation statut) { this.statut = statut; }
 
-    public void setDateDebut(LocalDate dateDebut) {
-        this.dateDebut = dateDebut;
-    }
+    public PaymentStatut getPaymentStatut() { return paymentStatut; }
+    public void setPaymentStatut(PaymentStatut paymentStatut) { this.paymentStatut = paymentStatut; }
 
-    public LocalDate getDateFin() {
-        return dateFin;
-    }
+    public String getMethodepayment() { return methodepayment; }
+    public void setMethodepayment(String methodepayment) { this.methodepayment = methodepayment; }
 
-    public void setDateFin(LocalDate dateFin) {
-        this.dateFin = dateFin;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public BigDecimal getPrixTotal() {
-        return prixTotal;
-    }
+    public LocalDateTime getDateCreation() { return dateCreation; }
+    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
-    public void setPrixTotal(BigDecimal prixTotal) {
-        this.prixTotal = prixTotal;
-    }
+    public LocalDateTime getDatepayment() { return datepayment; }
+    public void setDatepayment(LocalDateTime datepayment) { this.datepayment = datepayment; }
 
-    public StatutReservation getStatut() {
-        return statut;
-    }
-
-    public void setStatut(StatutReservation statut) {
-        this.statut = statut;
-    }
-
-    public LocalDateTime getDateCreation() {
-        return dateCreation;
-    }
-
-    public void setDateCreation(LocalDateTime dateCreation) {
-        this.dateCreation = dateCreation;
-    }
+    public Long getJoursRestants() { return joursRestants; }
+    public void setJoursRestants(Long joursRestants) { this.joursRestants = joursRestants; }
 }
-

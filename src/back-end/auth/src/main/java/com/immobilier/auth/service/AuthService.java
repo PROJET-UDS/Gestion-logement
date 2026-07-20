@@ -8,4 +8,6 @@ public interface AuthService {
     TokenResponseDTO login(LoginRequestDTO request);
     TokenResponseDTO refresh(RefreshRequestDTO request);
     JwtClaims        validate(ValidateTokenRequestDTO request);
+    void             logout(RefreshRequestDTO request);
+    void             changePassword(String userId, String oldPassword, String newPassword);
 }

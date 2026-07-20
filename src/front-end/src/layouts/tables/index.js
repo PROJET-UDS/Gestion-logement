@@ -27,7 +27,7 @@ function Tables() {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8082/api/users", {
+        const response = await fetch("http://localhost:8089/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
@@ -47,7 +47,7 @@ function Tables() {
     if (!window.confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) return;
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8082/api/users/${id}`, {
+      const response = await fetch(`http://localhost:8089/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

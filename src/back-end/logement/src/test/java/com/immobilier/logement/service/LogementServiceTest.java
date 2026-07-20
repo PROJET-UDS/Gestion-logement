@@ -8,6 +8,7 @@ import com.immobilier.logement.enums.StatutAnnonce;
 import com.immobilier.logement.mapper.LogementMapper;
 import com.immobilier.logement.rabbitmq.LogementEvent;
 import com.immobilier.logement.repository.LogementRepository;
+import com.immobilier.logement.repository.ValidationHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,9 @@ class LogementServiceTest {
 
     @Mock
     private FavoriHistoriqueService favoriHistoriqueService;
+
+    @Mock
+    private ValidationHistoryRepository validationHistoryRepository;
 
     @InjectMocks
     private LogementServiceImpl logementService;

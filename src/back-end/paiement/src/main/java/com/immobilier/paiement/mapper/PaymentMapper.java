@@ -31,6 +31,9 @@ public class PaymentMapper {
                 .provider(payment.getProvider())
                 .status(payment.getStatus())
                 .transactionRef(payment.getTransactionRef())
+                .cardLastFour(payment.getCardLastFour())
+                .cardBrand(payment.getCardBrand())
+                .failureReason(payment.getFailureReason())
                 .createdAt(payment.getCreatedAt())
                 .build();
     }

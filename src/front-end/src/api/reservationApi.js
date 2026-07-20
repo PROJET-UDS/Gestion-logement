@@ -22,6 +22,21 @@ export async function creerReservation(data) {
   return response.json();
 }
 
+export async function payerReservation(id, methodepayment) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/${id}/payer?methodepayment=${encodeURIComponent(methodepayment)}`,
+    {
+      method: "POST",
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors du paiement");
+  }
+  return response.json();
+}
+
 export async function getMesReservations() {
   const response = await fetch(`${API_BASE_URL}/api/reservations/mes-reservations`, {
     headers: { ...authHeaders() },
@@ -38,6 +53,33 @@ export async function annulerReservation(id) {
   if (!response.ok) {
     const err = await response.json().catch(() => null);
     throw new Error(err?.message || "Erreur lors de l'annulation");
+  }
+  return response.json();
+}
+
+export async function payerLeReste(id, methode) {
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/${id}/payer-le-reste?methodepayment=${encodeURIComponent(methode)}`,
+    {
+      method: "POST",
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors du paiement du reste");
+  }
+  return response.json();
+}
+
+export async function rembourserReservation(id) {
+  const response = await fetch(`${API_BASE_URL}/api/reservations/${id}/rembourser`, {
+    method: "POST",
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors du remboursement");
   }
   return response.json();
 }

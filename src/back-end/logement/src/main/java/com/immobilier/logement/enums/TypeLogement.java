@@ -5,4 +5,8 @@ public enum TypeLogement {
     MAISON,
     STUDIO,
     CHAMBRE,
+    VILLA,
+    BUREAU,
+    TERRAIN,
+    AUTRE
 }

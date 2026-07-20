@@ -1,10 +1,11 @@
-const API_BASE_URL =
+export const API_BASE_URL =
   (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
   "http://localhost:8089";
 
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 const ROLE_KEY = "userRole";
+const USER_ID_KEY = "userId";
 const LEGACY_TOKEN_KEY = "token";
 
 export const AUTHENTICATED_ROLES = ["CLIENT", "PROPRIETAIRE", "ADMIN"];
@@ -20,6 +21,10 @@ export function getRefreshToken() {
 
 export function getUserRole() {
   return localStorage.getItem(ROLE_KEY) || decodeJwtPayload(getAccessToken())?.role || "VISITEUR";
+}
+
+export function getUserId() {
+  return localStorage.getItem(USER_ID_KEY) || decodeJwtPayload(getAccessToken())?.userId || decodeJwtPayload(getAccessToken())?.sub;
 }
 
 export function isAuthenticated() {
@@ -41,22 +46,27 @@ export function saveAuthSession(authData) {
   }
 
   const role = authData.role || decodeJwtPayload(accessToken)?.role || "VISITEUR";
+  const userId = authData.userId || decodeJwtPayload(accessToken)?.userId || decodeJwtPayload(accessToken)?.sub;
 
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   localStorage.setItem(LEGACY_TOKEN_KEY, accessToken);
   localStorage.setItem(ROLE_KEY, role);
+  if (userId) {
+    localStorage.setItem(USER_ID_KEY, String(userId));
+  }
 
   if (authData.refreshToken) {
     localStorage.setItem(REFRESH_TOKEN_KEY, authData.refreshToken);
   }
 
-  return { accessToken, refreshToken: authData.refreshToken, role };
+  return { accessToken, refreshToken: authData.refreshToken, role, userId };
 }
 
 export function clearAuthSession() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(USER_ID_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
@@ -71,6 +81,20 @@ export async function login(credentials) {
 
 export async function register(payload) {
   return authRequest("/auth/register", payload);
+}
+
+export async function logout() {
+  const refreshToken = getRefreshToken();
+  try {
+    await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch (err) {
+    // Ignore errors on logout
+  }
+  clearAuthSession();
 }
 
 async function authRequest(path, body) {

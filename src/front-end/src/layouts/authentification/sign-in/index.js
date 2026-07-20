@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -16,6 +16,8 @@ function SignIn() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -25,7 +27,7 @@ function SignIn() {
     try {
       const data = await login({ email, password });
       const session = saveAuthSession(data);
-      const redirectTo = location.state?.from?.pathname || getDefaultRouteForRole(session.role);
+      const redirectTo = redirectParam || location.state?.from?.pathname || getDefaultRouteForRole(session.role);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Email ou mot de passe incorrect");

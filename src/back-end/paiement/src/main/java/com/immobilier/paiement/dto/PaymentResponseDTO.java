@@ -17,11 +17,14 @@ public class PaymentResponseDTO {
 
     private Long id;
     private Long reservationId;
-    private Long userId;
+    private String userId;
     private Double amount;
     private String currency;
     private PaymentProvider provider;
     private PaymentStatus status;
     private String transactionRef;
+    private String cardLastFour;
+    private String cardBrand;
+    private String failureReason;
     private LocalDateTime createdAt;
 }

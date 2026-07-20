@@ -12,7 +12,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     List<Payment> findByReservationId(Long reservationId);
 
-    List<Payment> findByUserId(Long userId);
+    List<Payment> findByUserId(String userId);
 
     Optional<Payment> findByTransactionRef(String transactionRef);
+
+    Optional<Payment> findByIdempotencyKey(String idempotencyKey);
 }

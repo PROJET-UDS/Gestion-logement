@@ -16,13 +16,13 @@ public class PaymentRequestDTO {
     private Long reservationId;
 
     @NotNull(message = "L'utilisateur est obligatoire")
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "Le montant est obligatoire")
     @Positive(message = "Le montant doit être positif")
     private Double amount;
 
-    @NotNull(message = "Le moyen de paiement est obligatoire")
+    @NotNull(message = "Le moyen de payment est obligatoire")
     private PaymentProvider provider;
 
     @NotNull(message = "Le numéro de téléphone est obligatoire")

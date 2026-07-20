@@ -37,17 +37,17 @@ spring:
         - id: logement
           uri: lb://logement
           predicates:
-            - Path=/logements/**,/api/v1/logements/**
+            - Path=/logements/**,/api/v1/logements/**,/api/v1/newsletter/**
 
         - id: reservation
           uri: lb://reservation
           predicates:
             - Path=/api/reservations/**,/reservations/**
 
-        - id: paiement
-          uri: lb://paiement
+        - id: payment
+          uri: lb://payment
           predicates:
-            - Path=/paiements/**,/abonnements/**,/reversements/**,/webhooks/**
+            - Path=/payments/**,/api/payments/**,/abonnements/**,/reversements/**,/webhooks/**
 
         - id: messagerie
           uri: lb://messagerie

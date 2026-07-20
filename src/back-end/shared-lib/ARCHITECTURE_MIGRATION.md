@@ -21,8 +21,8 @@ Gestion immobilier/
 │   └── src/main/java/com/immobilier/logement/
 ├── reservation/
 │   └── src/main/java/com/immobilier/reservation/
-├── paiement/
-│   └── src/main/java/com/immobilier/paiement/
+├── payment/
+│   └── src/main/java/com/immobilier/payment/
 ├── messagerie/
 │   └── src/main/java/com/immobilier/messagerie/
 └── shared-lib/
@@ -40,13 +40,13 @@ shared-lib/src/main/java/com/immobilier/shared/
 │   └── JwtClaims.java
 ├── enums/
 │   ├── PlanAbonnement.java
-│   ├── StatutPaiement.java
+│   ├── Statutpayment.java
 │   ├── StatutReservation.java
 │   ├── TypeTransaction.java
 │   └── UserRole.java
 ├── events/
 │   ├── AbonnementActiveEvent.java
-│   ├── PaiementConfirmeEvent.java
+│   ├── paymentConfirmeEvent.java
 │   ├── ReservationConfirmeeEvent.java
 │   ├── UserRegisteredEvent.java
 │   └── UserRoleChangedEvent.java
@@ -80,7 +80,7 @@ auth          -> com.immobilier.auth
 user          -> com.immobilier.user
 logement      -> com.immobilier.logement
 reservation   -> com.immobilier.reservation
-paiement      -> com.immobilier.paiement
+payment      -> com.immobilier.payment
 messagerie    -> com.immobilier.messagerie
 ```
 
@@ -124,7 +124,7 @@ shared-lib/src/main/java/com/immobilier/shared/exceptions/GlobalExceptionHandler
 logement/src/main/java/com/immobilier/logement/logementApplication.java
 messagerie/src/main/java/com/immobilier/messagerie/messagerieApplication.java
 notification/src/main/java/com/immobilier/
-paiement/src/main/java/com/immobilier/paiement/paiementApplication.java
+payment/src/main/java/com/immobilier/payment/paymentApplication.java
 reservation/src/main/java/com/immobilier/reservation/reservationApplication.java
 ```
 
@@ -139,7 +139,7 @@ com.immobilier.auth         -> com.immobilier.auth
 com.immobilier.user         -> com.immobilier.user
 com.immobilier.logement     -> com.immobilier.logement
 com.immobilier.reservation  -> com.immobilier.reservation
-com.immobilier.paiement     -> com.immobilier.paiement
+com.immobilier.payment     -> com.immobilier.payment
 com.immobilier.messagerie   -> com.immobilier.messagerie
 
 ```
@@ -162,7 +162,7 @@ Additional moves:
 */config/SecurityConfig.java                  -> */security/SecurityConfig.java
 shared/security/JwtClaims.java                -> shared/dto/JwtClaims.java
 logement/spec/LogementSpecification.java -> logement/repository/specification/LogementSpecification.java
-paiement/provider/*                   -> paiement/service/provider/*
+payment/provider/*                   -> payment/service/provider/*
 ```
 
 ## Migration Steps
@@ -189,7 +189,7 @@ The full Maven reactor build succeeds with Java 21 and Spring Boot 3.3 / Spring 
 BUILD SUCCESS
 Modules built: parent, shared-lib, config-server, discover, gateway,
 auth, user, logement, reservation,
-paiement, messagerie.
+payment, messagerie.
 ```
 
 Tests were skipped as requested by the build command, so this validates compilation and packaging, not runtime integration behavior.

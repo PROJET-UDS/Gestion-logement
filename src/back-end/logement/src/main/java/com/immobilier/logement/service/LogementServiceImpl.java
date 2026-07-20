@@ -6,6 +6,7 @@ import com.immobilier.logement.dto.LogementResponseDTO;
 import com.immobilier.logement.dto.PrixInsightDTO;
 import com.immobilier.logement.entity.Logement;
 import com.immobilier.logement.entity.MediaLogement;
+import com.immobilier.logement.entity.ValidationHistory;
 import com.immobilier.logement.enums.StatutAnnonce;
 import com.immobilier.logement.enums.TypeLogement;
 import com.immobilier.logement.enums.TypeTransaction;
@@ -14,8 +15,10 @@ import com.immobilier.logement.mapper.LogementMapper;
 import com.immobilier.logement.rabbitmq.LogementEvent;
 import com.immobilier.logement.repository.LogementRepository;
 import com.immobilier.logement.repository.StatistiquesPrixProjection;
+import com.immobilier.logement.repository.ValidationHistoryRepository;
 import com.immobilier.logement.specification.LogementSpecification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,8 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LogementServiceImpl implements LogementService {
@@ -34,12 +39,13 @@ public class LogementServiceImpl implements LogementService {
     private final LogementMapper logementMapper;
     private final AlerteService alerteService;
     private final FavoriHistoriqueService favoriHistoriqueService;
+    private final ValidationHistoryRepository validationHistoryRepository;
 
     @Override
     @Transactional
     public LogementResponseDTO creerLogement(LogementRequestDTO requestDTO) {
         Logement logement = logementMapper.toEntity(requestDTO);
-        logement.setStatutAnnonce(StatutAnnonce.VALIDE);
+        logement.setStatutAnnonce(StatutAnnonce.EN_ATTENTE_VALIDATION);
 
         if (requestDTO.getMedias() != null) {
             List<MediaLogement> medias = requestDTO.getMedias().stream()
@@ -61,19 +67,22 @@ public class LogementServiceImpl implements LogementService {
             System.err.println("[ERREUR ALERTE] Impossible de vérifier les alertes : " + e.getMessage());
         }
 
-        LogementEvent event = new LogementEvent(
-                sauvegarde.getId(),
-                sauvegarde.getTitre(),
-                sauvegarde.getPrix(),
-                sauvegarde.getTypeTransaction(),
-                sauvegarde.getProprietaireId()
-        );
-
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.LOGEMENT_EXCHANGE,
-                RabbitMQConfig.ROUTING_KEY_LOGEMENT_CREE,
-                event
-        );
+        try {
+            LogementEvent event = new LogementEvent(
+                    sauvegarde.getId(),
+                    sauvegarde.getTitre(),
+                    sauvegarde.getPrix(),
+                    sauvegarde.getTypeTransaction(),
+                    sauvegarde.getProprietaireId()
+            );
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.LOGEMENT_EXCHANGE,
+                    RabbitMQConfig.ROUTING_KEY_LOGEMENT_CREE,
+                    event
+            );
+        } catch (Exception e) {
+            log.warn("Echec publication evenement RabbitMQ pour logement {}: {}", sauvegarde.getId(), e.getMessage());
+        }
 
         return logementMapper.toResponseDTO(sauvegarde);
     }
@@ -102,6 +111,9 @@ public class LogementServiceImpl implements LogementService {
     @Transactional(readOnly = true)
     public List<LogementResponseDTO> obtenirTousLesLogementsValides() {
         return logementRepository.findBySupprimeFalseOrSupprimeIsNull().stream()
+                .filter(l -> l.getStatutAnnonce() == StatutAnnonce.PUBLIEE
+                        || l.getStatutAnnonce() == StatutAnnonce.VALIDE
+                        || l.getStatutAnnonce() == StatutAnnonce.VALIDEE)
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -172,6 +184,143 @@ public class LogementServiceImpl implements LogementService {
     @Override
     public List<LogementResponseDTO> obtenirLogementsParProprietaire(String proprietaireId) {
         return logementRepository.findByProprietaireId(proprietaireId).stream()
+                .filter(l -> !Boolean.TRUE.equals(l.getSupprime()))
+                .map(logementMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public LogementResponseDTO soumettreAValidation(Long id, String proprietaireId) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (!logement.getProprietaireId().equals(proprietaireId)) {
+            throw new IllegalStateException("Seul le propriétaire peut soumettre son logement à validation");
+        }
+
+        if (logement.getStatutAnnonce() != StatutAnnonce.BROUILLON
+                && logement.getStatutAnnonce() != StatutAnnonce.REJETEE) {
+            throw new IllegalStateException("Le logement doit être en brouillon ou rejeté pour être soumis");
+        }
+
+        logement.setStatutAnnonce(StatutAnnonce.EN_ATTENTE_VALIDATION);
+        Logement sauvegarde = logementRepository.save(logement);
+
+        LogementEvent event = new LogementEvent(
+                sauvegarde.getId(),
+                sauvegarde.getTitre(),
+                sauvegarde.getPrix(),
+                sauvegarde.getTypeTransaction(),
+                sauvegarde.getProprietaireId()
+        );
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LOGEMENT_EXCHANGE,
+                "logement.soumis",
+                event
+        );
+
+        log.info("Logement {} soumis à validation par {}", id, proprietaireId);
+        return logementMapper.toResponseDTO(sauvegarde);
+    }
+
+    @Override
+    @Transactional
+    public LogementResponseDTO validerLogement(Long id, String adminId) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (logement.getStatutAnnonce() != StatutAnnonce.EN_ATTENTE_VALIDATION) {
+            throw new IllegalStateException("Le logement doit être en attente de validation");
+        }
+
+        logement.setStatutAnnonce(StatutAnnonce.PUBLIEE);
+        Logement sauvegarde = logementRepository.save(logement);
+
+        ValidationHistory history = ValidationHistory.builder()
+                .logementId(id)
+                .adminId(adminId)
+                .decision(StatutAnnonce.PUBLIEE)
+                .correlationId(UUID.randomUUID().toString())
+                .build();
+        validationHistoryRepository.save(history);
+
+        LogementEvent event = new LogementEvent(
+                sauvegarde.getId(),
+                sauvegarde.getTitre(),
+                sauvegarde.getPrix(),
+                sauvegarde.getTypeTransaction(),
+                sauvegarde.getProprietaireId()
+        );
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LOGEMENT_EXCHANGE,
+                "logement.valide",
+                event
+        );
+
+        log.info("Logement {} validé par admin {}", id, adminId);
+        return logementMapper.toResponseDTO(sauvegarde);
+    }
+
+    @Override
+    @Transactional
+    public LogementResponseDTO rejeterLogement(Long id, String adminId, String motif) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (logement.getStatutAnnonce() != StatutAnnonce.EN_ATTENTE_VALIDATION) {
+            throw new IllegalStateException("Le logement doit être en attente de validation");
+        }
+
+        if (motif == null || motif.isBlank()) {
+            throw new IllegalArgumentException("Le motif de rejet est obligatoire");
+        }
+
+        logement.setStatutAnnonce(StatutAnnonce.REJETEE);
+        Logement sauvegarde = logementRepository.save(logement);
+
+        ValidationHistory history = ValidationHistory.builder()
+                .logementId(id)
+                .adminId(adminId)
+                .decision(StatutAnnonce.REJETEE)
+                .motif(motif)
+                .correlationId(UUID.randomUUID().toString())
+                .build();
+        validationHistoryRepository.save(history);
+
+        log.info("Logement {} rejeté par admin {} - motif: {}", id, adminId, motif);
+        return logementMapper.toResponseDTO(sauvegarde);
+    }
+
+    @Override
+    @Transactional
+    public LogementResponseDTO archiverLogement(Long id, String proprietaireId) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (!logement.getProprietaireId().equals(proprietaireId)) {
+            throw new IllegalStateException("Seul le propriétaire peut archiver son logement");
+        }
+
+        logement.setStatutAnnonce(StatutAnnonce.ARCHIVEE);
+        Logement sauvegarde = logementRepository.save(logement);
+
+        log.info("Logement {} archivé par {}", id, proprietaireId);
+        return logementMapper.toResponseDTO(sauvegarde);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LogementResponseDTO> obtenirLogementsEnAttenteValidation() {
+        return logementRepository.findByStatutAnnonce(StatutAnnonce.EN_ATTENTE_VALIDATION).stream()
+                .map(logementMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LogementResponseDTO> obtenirLogementsPublies() {
+        return logementRepository.findByStatutAnnonce(StatutAnnonce.PUBLIEE).stream()
                 .filter(l -> !Boolean.TRUE.equals(l.getSupprime()))
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());

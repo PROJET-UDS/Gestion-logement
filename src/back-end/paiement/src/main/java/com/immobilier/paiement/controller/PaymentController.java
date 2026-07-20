@@ -1,5 +1,7 @@
 package com.immobilier.paiement.controller;
 
+import com.immobilier.paiement.dto.CardPaymentRequestDTO;
+import com.immobilier.paiement.dto.PaiementFromReservationRequestDTO;
 import com.immobilier.paiement.dto.PaymentRequestDTO;
 import com.immobilier.paiement.dto.PaymentResponseDTO;
 import com.immobilier.paiement.entity.PaymentStatus;
@@ -25,6 +27,19 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/from-reservation")
+    public ResponseEntity<PaymentResponseDTO> creerDepuisReservation(@RequestBody PaiementFromReservationRequestDTO requestDTO) {
+        PaymentResponseDTO response = paymentService.creerPaiementDepuisReservation(requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/card")
+    public ResponseEntity<PaymentResponseDTO> processCardPayment(@Valid @RequestBody CardPaymentRequestDTO requestDTO) {
+        PaymentResponseDTO response = paymentService.processCardPayment(requestDTO);
+        HttpStatus status = response.getStatus() == PaymentStatus.SUCCESS ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(status).body(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponseDTO> getPaymentById(@PathVariable Long id) {
         PaymentResponseDTO response = paymentService.getPaymentById(id);
@@ -38,7 +53,7 @@ public class PaymentController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByUser(@PathVariable String userId) {
         List<PaymentResponseDTO> response = paymentService.getPaymentsByUser(userId);
         return ResponseEntity.ok(response);
     }

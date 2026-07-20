@@ -84,4 +84,43 @@ public class LogementController {
             @RequestParam(required = false) Double prixPropose) {
         return ResponseEntity.ok(logementService.obtenirInsightsPrix(ville, typeLogement, prixPropose));
     }
+
+    @PatchMapping("/{id}/soumettre")
+    public ResponseEntity<LogementResponseDTO> soumettreAValidation(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(logementService.soumettreAValidation(id, user.userId()));
+    }
+
+    @PatchMapping("/{id}/valider")
+    public ResponseEntity<LogementResponseDTO> validerLogement(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(logementService.validerLogement(id, user.userId()));
+    }
+
+    @PatchMapping("/{id}/rejeter")
+    public ResponseEntity<LogementResponseDTO> rejeterLogement(
+            @PathVariable Long id,
+            @RequestParam String motif,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(logementService.rejeterLogement(id, user.userId(), motif));
+    }
+
+    @PatchMapping("/{id}/archiver")
+    public ResponseEntity<LogementResponseDTO> archiverLogement(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(logementService.archiverLogement(id, user.userId()));
+    }
+
+    @GetMapping("/en-attente-validation")
+    public ResponseEntity<List<LogementResponseDTO>> logementsEnAttenteValidation() {
+        return ResponseEntity.ok(logementService.obtenirLogementsEnAttenteValidation());
+    }
+
+    @GetMapping("/publies")
+    public ResponseEntity<List<LogementResponseDTO>> logementsPublies() {
+        return ResponseEntity.ok(logementService.obtenirLogementsPublies());
+    }
 }

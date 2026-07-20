@@ -1,6 +1,7 @@
 package com.immobilier.auth.security;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -29,7 +33,12 @@ public class SecurityConfig {
                     "/auth/register",
                     "/auth/refresh",
                     "/auth/validate",
-                    "/auth/health"
+                    "/auth/health",
+                    "/auth/forgot-password",
+                    "/auth/forgot-password/resend",
+                    "/auth/reset-password",
+                    "/auth/logout",
+                    "/auth/change-password"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
@@ -47,8 +56,10 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> origins = List.of(allowedOrigins.split(","));
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));

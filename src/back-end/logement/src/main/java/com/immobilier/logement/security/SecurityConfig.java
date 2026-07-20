@@ -46,6 +46,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/logements/recherche").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/logements/autour-de-moi").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/logements/insights-prix").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/logements/publies").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/avis/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

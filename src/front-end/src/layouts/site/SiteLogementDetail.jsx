@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
@@ -7,6 +7,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import Icon from "@mui/material/Icon";
 import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -16,7 +17,7 @@ import MDAlert from "components/MDAlert";
 import PageLayout from "examples/LayoutContainers/PageLayout";
 
 import { getLogementById, getFileUrl } from "api/logementApi";
-import { creerReservation } from "api/reservationApi";
+import { creerReservation, payerReservation } from "api/reservationApi";
 import { isAuthenticated, getUserRole } from "services/authService";
 
 const STATUT_COLORS = {
@@ -29,6 +30,9 @@ const STATUT_COLORS = {
 function SiteLogementDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reserverAuto = searchParams.get("reserver") === "1";
+  const formRef = useRef(null);
   const [logement, setLogement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -36,6 +40,11 @@ function SiteLogementDetail() {
 
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
+  const [methodepayment, setMethodepayment] = useState("VISA");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
   const [reservationLoading, setReservationLoading] = useState(false);
   const [reservationMsg, setReservationMsg] = useState(null);
   const [reservationStatut, setReservationStatut] = useState(null);
@@ -46,6 +55,14 @@ function SiteLogementDetail() {
       .catch((err) => setErreur(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (reserverAuto && !loading && logement) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 500);
+    }
+  }, [reserverAuto, loading, logement]);
 
   const handleReservation = async (e) => {
     e.preventDefault();
@@ -74,20 +91,38 @@ function SiteLogementDetail() {
       return;
     }
 
+    const isCard = methodepayment === "VISA";
+    if (isCard && (!cardNumber || !cvv || !expiryDate)) {
+      setReservationStatut("error");
+      setReservationMsg("Veuillez remplir les informations de la carte");
+      return;
+    }
+    if (!isCard && !phoneNumber) {
+      setReservationStatut("error");
+      setReservationMsg("Veuillez entrer votre numero de telephone");
+      return;
+    }
+
     setReservationLoading(true);
     try {
-      await creerReservation({
+      const reservation = await creerReservation({
         logementId: logement.id,
         dateDebut,
         dateFin,
+        methodepayment,
+        phoneNumber: methodepayment !== "VISA" ? phoneNumber : undefined,
       });
+      try {
+        await payerReservation(reservation.id, methodepayment);
+      } catch (payErr) {
+        // payment optional, reservation created
+      }
       setReservationStatut("success");
-      setReservationMsg("Réservation créée avec succès ! Vous recevrez une confirmation.");
-      setDateDebut("");
-      setDateFin("");
+      setReservationMsg("Reservation creee avec succes !");
+      setTimeout(() => navigate("/mes-reservations", { replace: true }), 1500);
     } catch (err) {
       setReservationStatut("error");
-      setReservationMsg(err.message || "Erreur lors de la réservation.");
+      setReservationMsg(err.message || "Erreur lors de la reservation.");
     } finally {
       setReservationLoading(false);
     }
@@ -258,7 +293,7 @@ function SiteLogementDetail() {
                     </MDBox>
 
                     {logement.typeTransaction === "LOCATION" && (
-                      <MDBox component="form" onSubmit={handleReservation}>
+                      <MDBox component="form" onSubmit={handleReservation} ref={formRef}>
                         <MDTypography variant="h6" fontWeight="medium" mb={2}>Réserver ce logement</MDTypography>
 
                         {reservationMsg && (
@@ -305,6 +340,67 @@ function SiteLogementDetail() {
                           </MDBox>
                         )}
 
+                        <TextField
+                          select
+                          fullWidth
+                          size="small"
+                          label="Moyen de paiement"
+                          value={methodepayment}
+                          onChange={(e) => setMethodepayment(e.target.value)}
+                          sx={{ mb: 2 }}
+                        >
+                          <MenuItem value="VISA">Carte Visa</MenuItem>
+                          <MenuItem value="ORANGE_MONEY">Orange Money</MenuItem>
+                          <MenuItem value="MTN_MOMO">MTN MoMo</MenuItem>
+                          <MenuItem value="WAVE">Wave</MenuItem>
+                        </TextField>
+
+                        {methodepayment === "VISA" ? (
+                          <>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label="Numero de carte"
+                              value={cardNumber}
+                              onChange={(e) => setCardNumber(e.target.value)}
+                              placeholder="4242 4242 4242 4242"
+                              sx={{ mb: 2 }}
+                            />
+                            <MDBox display="flex" gap={1}>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Date d'expiration"
+                                value={expiryDate}
+                                onChange={(e) => setExpiryDate(e.target.value)}
+                                placeholder="MM/AA"
+                                sx={{ mb: 2 }}
+                              />
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="CVV"
+                                type="password"
+                                value={cvv}
+                                onChange={(e) => setCvv(e.target.value)}
+                                placeholder="123"
+                                inputProps={{ maxLength: 3 }}
+                                sx={{ mb: 2 }}
+                              />
+                            </MDBox>
+                          </>
+                        ) : (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Numero de telephone"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="6XX XXX XXX"
+                            sx={{ mb: 2 }}
+                          />
+                        )}
+
                         <MDButton
                           variant="gradient"
                           color="info"
@@ -312,7 +408,7 @@ function SiteLogementDetail() {
                           fullWidth
                           disabled={reservationLoading}
                         >
-                          {reservationLoading ? <CircularProgress size={20} color="inherit" /> : "Réserver maintenant"}
+                          {reservationLoading ? <CircularProgress size={20} color="inherit" /> : "Reserver et payer"}
                         </MDButton>
 
                         {!isAuthenticated() && (

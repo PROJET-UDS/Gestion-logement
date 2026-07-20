@@ -30,4 +30,16 @@ public interface LogementService {
     PrixInsightDTO obtenirInsightsPrix(String ville, TypeLogement typeLogement, Double prixPropose);
 
     List<LogementResponseDTO> obtenirLogementsParProprietaire(String proprietaireId);
+
+    LogementResponseDTO soumettreAValidation(Long id, String proprietaireId);
+
+    LogementResponseDTO validerLogement(Long id, String adminId);
+
+    LogementResponseDTO rejeterLogement(Long id, String adminId, String motif);
+
+    LogementResponseDTO archiverLogement(Long id, String proprietaireId);
+
+    List<LogementResponseDTO> obtenirLogementsEnAttenteValidation();
+
+    List<LogementResponseDTO> obtenirLogementsPublies();
 }

@@ -3,6 +3,7 @@ package com.immobilier.auth.entity;
 import com.immobilier.shared.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 
@@ -26,6 +27,15 @@ public class AuthUser {
     @Column(nullable = false)
     @Builder.Default
     private boolean actif = true;
+
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean mustChangePassword = false;
+
+    @Column(length = 512)
+    private String refreshToken;
+
+    private Instant refreshTokenExpiry;
 
     private Instant createdAt;
 

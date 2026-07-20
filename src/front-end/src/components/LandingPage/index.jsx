@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-
+import { useNavigate, Link } from "react-router-dom";
 import Icon from "@mui/material/Icon";
 import CircularProgress from "@mui/material/CircularProgress";
-
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import Divider from "@mui/material/Divider";
 import PageLayout from "examples/LayoutContainers/PageLayout";
 import { getLogementsPublic, getFileUrl } from "api/logementApi";
+import { isAuthenticated, getUserRole, logout, getUserId } from "services/authService";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -16,6 +21,24 @@ function LandingPage() {
   const [searchVille, setSearchVille] = useState("");
   const [searchType, setSearchType] = useState("");
   const [searchTransaction, setSearchTransaction] = useState("");
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openMenu = Boolean(anchorEl);
+  const handleOpenMenu = (e) => setAnchorEl(e.currentTarget);
+  const handleCloseMenu = () => setAnchorEl(null);
+  const authenticated = isAuthenticated();
+  const role = getUserRole();
+
+  const handleMenuClick = (path) => {
+    handleCloseMenu();
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    handleCloseMenu();
+    logout();
+    navigate("/");
+  };
 
   useEffect(() => {
     getLogementsPublic()
@@ -37,43 +60,113 @@ function LandingPage() {
     <PageLayout>
       <div style={{ fontFamily: "sans-serif", margin: 0, padding: 0 }}>
 
-        <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000 }}>
+        <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000, boxSizing: "border-box" }}>
           <h1 style={{ color: "#f0a500", fontSize: "50px", fontWeight: "bold", margin: 0 }}>SearcHome</h1>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <a href="#accueil" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Accueil</a>
             <a href="#proprietes" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Propriétés</a>
             <a href="#apropos" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>À propos</a>
             <a href="#contact" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Contact</a>
-            <Link to="/authentification/sign-in" style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", marginLeft: 10 }}>Connexion</Link>
-            <Link to="/authentification/sign-up" style={{ backgroundColor: "transparent", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", border: "1px solid white", marginLeft: 10 }}>Inscription</Link>
+            {authenticated ? (
+              <>
+                <Avatar
+                  onClick={handleOpenMenu}
+                  sx={{ bgcolor: "#f0a500", cursor: "pointer", width: 36, height: 36, fontSize: 16, fontWeight: "bold", marginLeft: 2 }}
+                >
+                  {role ? role.charAt(0) : "U"}
+                </Avatar>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={openMenu}
+                  onClose={handleCloseMenu}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                  PaperProps={{ sx: { minWidth: 180, mt: 1 } }}
+                >
+                  <MenuItem onClick={() => handleMenuClick("/dashboard")}>
+                    <ListItemIcon><Icon fontSize="small">dashboard</Icon></ListItemIcon>
+                    Dashboard
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuClick("/profile")}>
+                    <ListItemIcon><Icon fontSize="small">person</Icon></ListItemIcon>
+                    Profil
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuClick("/mes-reservations")}>
+                    <ListItemIcon><Icon fontSize="small">book_online</Icon></ListItemIcon>
+                    Mes reservations
+                  </MenuItem>
+                  <MenuItem onClick={() => handleMenuClick("/billing")}>
+                    <ListItemIcon><Icon fontSize="small">receipt_long</Icon></ListItemIcon>
+                    Paiements
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleLogout}>
+                    <ListItemIcon><Icon fontSize="small">logout</Icon></ListItemIcon>
+                    Deconnexion
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Link to="/authentification/sign-in" style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", marginLeft: 10 }}>Connexion</Link>
+                <Link to="/authentification/sign-up" style={{ backgroundColor: "transparent", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", border: "1px solid white", marginLeft: 10 }}>Inscription</Link>
+              </>
+            )}
           </div>
         </nav>
 
-        <div id="accueil" style={{ backgroundColor: "#1a1a2e", padding: "150px 50px 100px", textAlign: "left", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div id="accueil" style={{ backgroundColor: "#1a1a2e", padding: "150px 50px 100px", textAlign: "left", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", boxSizing: "border-box" }}>
           <h2 style={{ color: "white", fontSize: "56px", fontWeight: "bold", marginBottom: 20 }}>Trouvez Votre<br/>Logement Idéal</h2>
           <p style={{ color: "#ccc", fontSize: 18, marginBottom: 40, maxWidth: 600 }}>Plateforme de gestion de logements simple et efficace. Trouvez, réservez et gérez vos logements en toute simplicité.</p>
 
-          <form onSubmit={handleSearch} style={{ backgroundColor: "white", padding: 20, borderRadius: 10, display: "flex", gap: 10, maxWidth: 700 }}>
-            <select value={searchTransaction} onChange={(e) => setSearchTransaction(e.target.value)} style={{ padding: 10, borderRadius: 5, border: "1px solid #ccc", flex: 1 }}>
-              <option value="">Objectif</option>
-              <option value="LOCATION">Louer</option>
-              <option value="VENTE">Acheter</option>
-            </select>
-            <select value={searchVille} onChange={(e) => setSearchVille(e.target.value)} style={{ padding: 10, borderRadius: 5, border: "1px solid #ccc", flex: 1 }}>
-              <option value="">Localisation</option>
-              <option value="Yaoundé">Yaoundé</option>
-              <option value="Douala">Douala</option>
-              <option value="Bafoussam">Bafoussam</option>
-              <option value="Bamenda">Bamenda</option>
-            </select>
-            <select value={searchType} onChange={(e) => setSearchType(e.target.value)} style={{ padding: 10, borderRadius: 5, border: "1px solid #ccc", flex: 1 }}>
-              <option value="">Type</option>
-              <option value="APPARTEMENT">Appartement</option>
-              <option value="MAISON">Villa</option>
-              <option value="STUDIO">Studio</option>
-              <option value="CHAMBRE">Chambre</option>
-            </select>
-            <button type="submit" style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 30px", borderRadius: 5, border: "none", cursor: "pointer", fontWeight: "bold" }}>Rechercher</button>
+          <form onSubmit={handleSearch} style={{ backgroundColor: "white", padding: 24, borderRadius: 16, display: "flex", gap: 12, maxWidth: 750, flexWrap: "wrap" }}>
+            <TextField
+              select
+              value={searchTransaction}
+              onChange={(e) => setSearchTransaction(e.target.value)}
+              label="Objectif"
+              size="small"
+              sx={{ flex: 1, minWidth: 140 }}
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="LOCATION">Louer</MenuItem>
+              <MenuItem value="VENTE">Acheter</MenuItem>
+            </TextField>
+            <TextField
+              select
+              value={searchVille}
+              onChange={(e) => setSearchVille(e.target.value)}
+              label="Localisation"
+              size="small"
+              sx={{ flex: 1, minWidth: 140 }}
+            >
+              <MenuItem value="">Toutes</MenuItem>
+              <MenuItem value="Yaoundé">Yaoundé</MenuItem>
+              <MenuItem value="Douala">Douala</MenuItem>
+              <MenuItem value="Bafoussam">Bafoussam</MenuItem>
+              <MenuItem value="Bamenda">Bamenda</MenuItem>
+            </TextField>
+            <TextField
+              select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              label="Type"
+              size="small"
+              sx={{ flex: 1, minWidth: 140 }}
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="APPARTEMENT">Appartement</MenuItem>
+              <MenuItem value="MAISON">Villa</MenuItem>
+              <MenuItem value="STUDIO">Studio</MenuItem>
+              <MenuItem value="CHAMBRE">Chambre</MenuItem>
+            </TextField>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ backgroundColor: "#f0a500", "&:hover": { backgroundColor: "#d49400" }, px: 4, fontWeight: "bold", minWidth: 140 }}
+            >
+              Rechercher
+            </Button>
           </form>
         </div>
 
@@ -118,7 +211,37 @@ function LandingPage() {
                     {Number(logement.prix).toLocaleString("fr-FR")} FCFA
                     {logement.typeTransaction === "LOCATION" && <span style={{ fontWeight: "normal", fontSize: 12 }}>/mois</span>}
                   </p>
-                  <button style={{ backgroundColor: "#1a1a2e", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", width: "100%", marginTop: 10 }}>Voir détails</button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/annonces/${logement.id}`); }}
+                      style={{ backgroundColor: "#1a1a2e", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1 }}
+                    >
+                      Voir détails
+                    </button>
+                    {logement.typeTransaction === "LOCATION" && (() => {
+                      if (!isAuthenticated()) {
+                        return (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/authentification/sign-up?reserver=${logement.id}`); }}
+                            style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1, fontWeight: "bold" }}
+                          >
+                            Réserver
+                          </button>
+                        );
+                      }
+                      if (getUserRole() === "CLIENT") {
+                        return (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/annonces/${logement.id}?reserver=1`); }}
+                            style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1, fontWeight: "bold" }}
+                          >
+                            Réserver
+                          </button>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
               ))}
             </div>
@@ -133,7 +256,7 @@ function LandingPage() {
           )}
         </div>
 
-        <div id="apropos" style={{ padding: "80px 50px", backgroundColor: "white", display: "flex", gap: 50, alignItems: "center", justifyContent: "center" }}>
+        <div id="apropos" style={{ padding: "80px 50px", backgroundColor: "white", display: "flex", gap: 50, alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
           <div style={{ maxWidth: 500 }}>
             <h2 style={{ fontSize: 36, marginBottom: 20 }}>À Propos de Nous</h2>
             <p style={{ color: "#666", lineHeight: 1.8, marginBottom: 20 }}>Nous sommes une plateforme dédiée à la gestion de logements au Cameroun. Notre mission est de simplifier la recherche et la gestion de logements pour les propriétaires et les locataires.</p>
@@ -162,10 +285,10 @@ function LandingPage() {
           <div style={{ marginBottom: 20 }}>
             <a href="#accueil" style={{ color: "#ccc", marginRight: 20, textDecoration: "none" }}>Accueil</a>
             <a href="#proprietes" style={{ color: "#ccc", marginRight: 20, textDecoration: "none" }}>Propriétés</a>
-            <a href="#apropos" style={{ color: "#ccc", marginRight: 20, textDecoration: "none" }}>À propos</a>
+            <a href="#apropos" style={{ color: "#ccc", textDecoration: "none" }}>À propos</a>
             <a href="#contact" style={{ color: "#ccc", textDecoration: "none" }}>Contact</a>
           </div>
-          <p style={{ color: "#666", fontSize: 14 }}>&copy; 2026 SearcHome- Tous droits réservés</p>
+          <p style={{ color: "#666", fontSize: 14 }}>&copy; 2026 SearcHome - Tous droits réservés</p>
         </footer>
       </div>
     </PageLayout>

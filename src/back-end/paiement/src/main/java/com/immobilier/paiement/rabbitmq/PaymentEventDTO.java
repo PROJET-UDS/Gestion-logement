@@ -17,7 +17,7 @@ public class PaymentEventDTO {
 
     private Long paymentId;
     private Long reservationId;
-    private Long userId;
+    private String userId;
     private Double amount;
     private String currency;
     private PaymentProvider provider;

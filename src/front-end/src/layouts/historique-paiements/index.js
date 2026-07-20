@@ -21,23 +21,27 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
-// Service API paiement
-import { getHistoriquePaiements } from "api/paiementApi";
+// Service API payment
+import { getPaiementsParUser } from "api/paiementApi";
+import { getUserId } from "services/authService";
 
-function HistoriquePaiements() {
-  const [paiements, setPaiements] = useState([]);
+function Historiquepayments() {
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
 
   useEffect(() => {
     const fetchHistorique = async () => {
       try {
-        const response = await getHistoriquePaiements();
-        setPaiements(response.data);
+        const userId = getUserId();
+        if (userId) {
+          const data = await getPaiementsParUser(userId);
+          setPayments(Array.isArray(data) ? data : []);
+        }
         setErreur(null);
       } catch (error) {
         setErreur(
-          "Impossible de récupérer l'historique. Le backend n'est peut-être pas encore disponible."
+          "Impossible de recuperer l'historique."
         );
       } finally {
         setLoading(false);
@@ -56,7 +60,7 @@ function HistoriquePaiements() {
             <Card>
               <MDBox p={3}>
                 <MDTypography variant="h5" fontWeight="medium" mb={3}>
-                  Historique des paiements
+                  Historique des payments
                 </MDTypography>
 
                 {erreur && (
@@ -76,6 +80,7 @@ function HistoriquePaiements() {
                         <TableHead>
                           <TableRow>
                             <TableCell>ID</TableCell>
+                            <TableCell>Reservation</TableCell>
                             <TableCell>Montant</TableCell>
                             <TableCell>Devise</TableCell>
                             <TableCell>Statut</TableCell>
@@ -83,20 +88,21 @@ function HistoriquePaiements() {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {paiements.length === 0 ? (
+                          {payments.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={5} align="center">
-                                Aucun paiement trouvé.
+                                Aucun payment trouvé.
                               </TableCell>
                             </TableRow>
                           ) : (
-                            paiements.map((p) => (
+                            payments.map((p) => (
                               <TableRow key={p.id}>
                                 <TableCell>{p.id}</TableCell>
+                                <TableCell>{p.reservationId || "-"}</TableCell>
                                 <TableCell>{p.montant}</TableCell>
-                                <TableCell>{p.devise}</TableCell>
-                                <TableCell>{p.statut}</TableCell>
-                                <TableCell>{p.dateCreation}</TableCell>
+                                <TableCell>{p.devise || "EUR"}</TableCell>
+                                <TableCell>{p.status || p.statut}</TableCell>
+                                <TableCell>{p.dateCreation ? new Date(p.dateCreation).toLocaleDateString("fr-FR") : "-"}</TableCell>
                               </TableRow>
                             ))
                           )}
@@ -115,4 +121,4 @@ function HistoriquePaiements() {
   );
 }
 
-export default HistoriquePaiements;
+export default Historiquepayments;

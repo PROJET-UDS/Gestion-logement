@@ -1,23 +1,22 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Card from "@mui/material/Card";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentification/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
-import { getDefaultRouteForRole, register, saveAuthSession } from "services/authService";
+import { register, saveAuthSession } from "services/authService";
 
 function SignUp() {
+  const [searchParams] = useSearchParams();
+  const reserverLogementId = searchParams.get("reserver");
+  const isReservationFlow = !!reserverLogementId;
+
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("CLIENT");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,9 +27,13 @@ function SignUp() {
     setLoading(true);
 
     try {
-      const data = await register({ nom, email, password, role });
-      const session = saveAuthSession(data);
-      navigate(getDefaultRouteForRole(session.role), { replace: true });
+      const data = await register({ nom, email, password, role: "CLIENT" });
+      saveAuthSession(data);
+      if (isReservationFlow) {
+        navigate(`/annonces/${reserverLogementId}?reserver=1`, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {
@@ -53,7 +56,7 @@ function SignUp() {
           textAlign="center"
         >
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            Inscription
+            {isReservationFlow ? "Creer un compte pour reserver" : "Inscription"}
           </MDTypography>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
@@ -85,20 +88,13 @@ function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </MDBox>
-            <MDBox mb={2}>
-              <FormControl fullWidth>
-                <InputLabel id="register-role-label">Type de compte</InputLabel>
-                <Select
-                  labelId="register-role-label"
-                  value={role}
-                  label="Type de compte"
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <MenuItem value="CLIENT">Client</MenuItem>
-                  <MenuItem value="PROPRIETAIRE">Propriétaire</MenuItem>
-                </Select>
-              </FormControl>
-            </MDBox>
+            {isReservationFlow && (
+              <MDBox mb={2} p={2} bgColor="grey-100" borderRadius="md">
+                <MDTypography variant="caption" color="text">
+                  Vous creez un compte client pour pouvoir reserver ce logement.
+                </MDTypography>
+              </MDBox>
+            )}
             {error && (
               <MDTypography variant="caption" color="error">
                 {error}
@@ -111,10 +107,10 @@ function SignUp() {
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
               <MDTypography variant="button" color="text">
-                Déjà un compte ?{" "}
+                Deja un compte ?{" "}
                 <MDTypography
                   component={Link}
-                  to="/authentification/sign-in"
+                  to={isReservationFlow ? `/authentification/sign-in?redirect=/annonces/${reserverLogementId}?reserver=1` : "/authentification/sign-in"}
                   variant="button"
                   color="info"
                   fontWeight="medium"

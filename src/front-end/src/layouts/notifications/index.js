@@ -1,193 +1,259 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023  (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-import { useState } from "react";
-
-// @mui material components
+import { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
-
-// Material Dashboard 2 React components
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import CircularProgress from "@mui/material/CircularProgress";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDAlert from "components/MDAlert";
+import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-import MDSnackbar from "components/MDSnackbar";
-
-// Material Dashboard 2 React example components
+import MDAlert from "components/MDAlert";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
+import { authHeaders, getUserRole } from "services/authService";
+
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  "http://localhost:8089";
 
 function Notifications() {
-  const [successSB, setSuccessSB] = useState(false);
-  const [infoSB, setInfoSB] = useState(false);
-  const [warningSB, setWarningSB] = useState(false);
-  const [errorSB, setErrorSB] = useState(false);
+  const [subscribers, setSubscribers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const openSuccessSB = () => setSuccessSB(true);
-  const closeSuccessSB = () => setSuccessSB(false);
-  const openInfoSB = () => setInfoSB(true);
-  const closeInfoSB = () => setInfoSB(false);
-  const openWarningSB = () => setWarningSB(true);
-  const closeWarningSB = () => setWarningSB(false);
-  const openErrorSB = () => setErrorSB(true);
-  const closeErrorSB = () => setErrorSB(false);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeMsg, setSubscribeMsg] = useState("");
 
-  const alertContent = (name) => (
-    <MDTypography variant="body2" color="white">
-      A simple {name} alert with{" "}
-      <MDTypography component="a" href="#" variant="body2" fontWeight="medium" color="white">
-        an example link
-      </MDTypography>
-      . Give it a click if you like.
-    </MDTypography>
-  );
+  const [subject, setSubject] = useState("");
+  const [content, setContent] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendMsg, setSendMsg] = useState("");
 
-  const renderSuccessSB = (
-    <MDSnackbar
-      color="success"
-      icon="check"
-      title="Material Dashboard"
-      content="Hello, world! This is a notification message"
-      dateTime="11 mins ago"
-      open={successSB}
-      onClose={closeSuccessSB}
-      close={closeSuccessSB}
-      bgWhite
-    />
-  );
+  const role = getUserRole();
+  const isAdmin = role === "ADMIN";
 
-  const renderInfoSB = (
-    <MDSnackbar
-      icon="notifications"
-      title="Material Dashboard"
-      content="Hello, world! This is a notification message"
-      dateTime="11 mins ago"
-      open={infoSB}
-      onClose={closeInfoSB}
-      close={closeInfoSB}
-    />
-  );
+  useEffect(() => {
+    if (isAdmin) loadSubscribers();
+    else setLoading(false);
+  }, []);
 
-  const renderWarningSB = (
-    <MDSnackbar
-      color="warning"
-      icon="star"
-      title="Material Dashboard"
-      content="Hello, world! This is a notification message"
-      dateTime="11 mins ago"
-      open={warningSB}
-      onClose={closeWarningSB}
-      close={closeWarningSB}
-      bgWhite
-    />
-  );
+  const loadSubscribers = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/newsletter/subscribers`, {
+        headers: { ...authHeaders() },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscribers(data);
+      }
+    } catch (err) {
+      setError("Impossible de charger les abonnes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const renderErrorSB = (
-    <MDSnackbar
-      color="error"
-      icon="warning"
-      title="Material Dashboard"
-      content="Hello, world! This is a notification message"
-      dateTime="11 mins ago"
-      open={errorSB}
-      onClose={closeErrorSB}
-      close={closeErrorSB}
-      bgWhite
-    />
-  );
+  const handlePublicSubscribe = async (e) => {
+    e.preventDefault();
+    setSubscribeMsg("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: subscribeEmail }),
+      });
+      if (res.ok) {
+        setSubscribeMsg("Inscription reussie !");
+        setSubscribeEmail("");
+      } else {
+        const err = await res.json();
+        setSubscribeMsg(err.message || "Erreur lors de l'inscription");
+      }
+    } catch (err) {
+      setSubscribeMsg("Erreur de connexion");
+    }
+  };
+
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    setSendMsg("");
+    setSending(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/newsletter/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(),
+        },
+        body: JSON.stringify({ subject, content }),
+      });
+      if (res.ok) {
+        setSendMsg("Notification envoyee a tous les abonnes !");
+        setSubject("");
+        setContent("");
+      } else {
+        const err = await res.json();
+        setSendMsg(err.message || "Erreur lors de l'envoi");
+      }
+    } catch (err) {
+      setSendMsg("Erreur de connexion");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox mt={6} mb={3}>
-        <Grid container spacing={3} justifyContent="center">
-          <Grid item xs={12} lg={8}>
+      <MDBox py={3}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
             <Card>
-              <MDBox p={2}>
-                <MDTypography variant="h5">Alerts</MDTypography>
-              </MDBox>
-              <MDBox pt={2} px={2}>
-                <MDAlert color="primary" dismissible>
-                  {alertContent("primary")}
-                </MDAlert>
-                <MDAlert color="secondary" dismissible>
-                  {alertContent("secondary")}
-                </MDAlert>
-                <MDAlert color="success" dismissible>
-                  {alertContent("success")}
-                </MDAlert>
-                <MDAlert color="error" dismissible>
-                  {alertContent("error")}
-                </MDAlert>
-                <MDAlert color="warning" dismissible>
-                  {alertContent("warning")}
-                </MDAlert>
-                <MDAlert color="info" dismissible>
-                  {alertContent("info")}
-                </MDAlert>
-                <MDAlert color="light" dismissible>
-                  {alertContent("light")}
-                </MDAlert>
-                <MDAlert color="dark" dismissible>
-                  {alertContent("dark")}
-                </MDAlert>
+              <MDBox p={3}>
+                <MDTypography variant="h5" fontWeight="medium" mb={3}>
+                  S'abonner a la newsletter
+                </MDTypography>
+                <MDBox component="form" onSubmit={handlePublicSubscribe}>
+                  <MDBox mb={2}>
+                    <MDInput
+                      type="email"
+                      label="Votre adresse email"
+                      fullWidth
+                      value={subscribeEmail}
+                      onChange={(e) => setSubscribeEmail(e.target.value)}
+                      required
+                    />
+                  </MDBox>
+                  <MDButton variant="gradient" color="info" type="submit">
+                    S'abonner
+                  </MDButton>
+                  {subscribeMsg && (
+                    <MDTypography
+                      variant="caption"
+                      color={subscribeMsg.includes("reussie") ? "success" : "error"}
+                      display="block"
+                      mt={1}
+                    >
+                      {subscribeMsg}
+                    </MDTypography>
+                  )}
+                </MDBox>
               </MDBox>
             </Card>
           </Grid>
 
-          <Grid item xs={12} lg={8}>
+          {isAdmin && (
+            <Grid item xs={12} md={6}>
+              <Card>
+                <MDBox p={3}>
+                  <MDTypography variant="h5" fontWeight="medium" mb={3}>
+                    Envoyer une notification
+                  </MDTypography>
+                  <MDBox component="form" onSubmit={handleSendNotification}>
+                    <MDBox mb={2}>
+                      <MDInput
+                        type="text"
+                        label="Sujet"
+                        fullWidth
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        required
+                      />
+                    </MDBox>
+                    <MDBox mb={2}>
+                      <MDInput
+                        type="text"
+                        label="Contenu"
+                        fullWidth
+                        multiline
+                        rows={3}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        required
+                      />
+                    </MDBox>
+                    <MDButton
+                      variant="gradient"
+                      color="primary"
+                      type="submit"
+                      disabled={sending}
+                    >
+                      {sending ? "Envoi en cours..." : "Envoyer"}
+                    </MDButton>
+                    {sendMsg && (
+                      <MDTypography
+                        variant="caption"
+                        color={sendMsg.includes("envoyee") ? "success" : "error"}
+                        display="block"
+                        mt={1}
+                      >
+                        {sendMsg}
+                      </MDTypography>
+                    )}
+                  </MDBox>
+                </MDBox>
+              </Card>
+            </Grid>
+          )}
+        </Grid>
+
+        {isAdmin && (
+          <Grid item xs={12} mt={3}>
             <Card>
-              <MDBox p={2} lineHeight={0}>
-                <MDTypography variant="h5">Notifications</MDTypography>
-                <MDTypography variant="button" color="text" fontWeight="regular">
-                  Notifications on this page use Toasts from Bootstrap. Read more details here.
+              <MDBox p={3}>
+                <MDTypography variant="h5" fontWeight="medium" mb={3}>
+                  Abonnes a la newsletter
                 </MDTypography>
-              </MDBox>
-              <MDBox p={2}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6} lg={3}>
-                    <MDButton variant="gradient" color="success" onClick={openSuccessSB} fullWidth>
-                      success notification
-                    </MDButton>
-                    {renderSuccessSB}
-                  </Grid>
-                  <Grid item xs={12} sm={6} lg={3}>
-                    <MDButton variant="gradient" color="info" onClick={openInfoSB} fullWidth>
-                      info notification
-                    </MDButton>
-                    {renderInfoSB}
-                  </Grid>
-                  <Grid item xs={12} sm={6} lg={3}>
-                    <MDButton variant="gradient" color="warning" onClick={openWarningSB} fullWidth>
-                      warning notification
-                    </MDButton>
-                    {renderWarningSB}
-                  </Grid>
-                  <Grid item xs={12} sm={6} lg={3}>
-                    <MDButton variant="gradient" color="error" onClick={openErrorSB} fullWidth>
-                      error notification
-                    </MDButton>
-                    {renderErrorSB}
-                  </Grid>
-                </Grid>
+                {error && (
+                  <MDBox mb={2}>
+                    <MDAlert color="error">{error}</MDAlert>
+                  </MDBox>
+                )}
+                {loading ? (
+                  <MDBox display="flex" justifyContent="center" p={3}>
+                    <CircularProgress />
+                  </MDBox>
+                ) : (
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Date d'inscription</TableCell>
+                          <TableCell>Statut</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {subscribers.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} align="center">
+                              Aucun abonne
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          subscribers.map((s) => (
+                            <TableRow key={s.id}>
+                              <TableCell>{s.email}</TableCell>
+                              <TableCell>{s.dateInscription || "-"}</TableCell>
+                              <TableCell>{s.active ? "Actif" : "Inactif"}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
               </MDBox>
             </Card>
           </Grid>
-        </Grid>
+        )}
       </MDBox>
       <Footer />
     </DashboardLayout>

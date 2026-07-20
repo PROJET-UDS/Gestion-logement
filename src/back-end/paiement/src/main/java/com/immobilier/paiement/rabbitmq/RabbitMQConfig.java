@@ -14,6 +14,8 @@ public class RabbitMQConfig {
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
     public static final String PAYMENT_QUEUE = "payment.queue";
     public static final String PAYMENT_ROUTING_KEY = "payment.event";
+    public static final String PAYMENT_SUCCEEDED_ROUTING_KEY = "payment.succeeded";
+    public static final String PAYMENT_FAILED_ROUTING_KEY = "payment.failed";
 
     @Bean
     public TopicExchange paymentExchange() {
@@ -30,7 +32,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(paymentQueue)
                 .to(paymentExchange)
-                .with(PAYMENT_ROUTING_KEY);
+                .with("payment.#");
     }
 
     @Bean

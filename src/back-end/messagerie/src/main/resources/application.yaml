@@ -16,13 +16,23 @@ spring:
       ddl-auto: update
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false
   rabbitmq:
     host: ${RABBITMQ_HOST}
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 eureka:
   client:
@@ -41,4 +51,4 @@ management:
       show-details: always
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}

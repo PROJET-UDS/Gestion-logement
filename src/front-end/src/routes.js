@@ -2,7 +2,7 @@ import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
 import UserDetail from "layouts/userdetail";
 import Billing from "layouts/billing";
-import RTL from "layouts/rtl";
+
 import Notifications from "layouts/notifications";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentification/sign-in";
@@ -11,6 +11,10 @@ import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
 import { AjouterLogement, MesLogements, LogementDetail } from "layouts/logements";
 import { SiteAnnonces, SiteLogementDetail } from "layouts/site";
+import MesReservations from "layouts/mes-reservations";
+import AdminValidation from "layouts/admin-validation";
+import CardPayment from "layouts/card-payment";
+import ProprietaireReservations from "layouts/proprietaire-reservations";
 import { AUTHENTICATED_ROLES } from "services/authService";
 
 import Icon from "@mui/material/Icon";
@@ -45,6 +49,33 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Validation",
+    key: "admin-validation",
+    icon: <Icon fontSize="small">gavel</Icon>,
+    route: "/admin/validation",
+    component: <AdminValidation />,
+    roles: ["ADMIN"],
+  },
+  {
+    type: "collapse",
+    name: "Mes Reservations",
+    key: "mes-reservations",
+    icon: <Icon fontSize="small">book_online</Icon>,
+    route: "/mes-reservations",
+    component: <MesReservations />,
+    roles: ["CLIENT"],
+  },
+  {
+    type: "collapse",
+    name: "Reservations",
+    key: "proprietaire-reservations",
+    icon: <Icon fontSize="small">receipt_long</Icon>,
+    route: "/proprietaire/reservations",
+    component: <ProprietaireReservations />,
+    roles: ["PROPRIETAIRE"],
+  },
+  {
+    type: "collapse",
     name: "Paiements",
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
@@ -54,14 +85,15 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "RTL",
-    key: "rtl",
-    icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
-    route: "/rtl",
-    component: <RTL />,
-    roles: ["ADMIN"],
+    name: "Paiement",
+    key: "card-payment",
+    icon: <Icon fontSize="small">credit_card</Icon>,
+    route: "/paiement/carte",
+    component: <CardPayment />,
+    roles: ["CLIENT"],
     hideInSidenav: true,
   },
+
   {
     type: "collapse",
     name: "Notifications",

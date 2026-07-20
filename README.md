@@ -16,7 +16,7 @@
 | user       | 8082 | Gestion des utilisateurs et demandes |
 | logement   | 8083 | Gestion des logements |
 | reservation | 8084 | Gestion des réservations |
-| paiement   | 8085 | Gestion des paiements, abonnements |
+| payment   | 8085 | Gestion des payments, abonnements |
 | messagerie | 8086 | Messagerie interne |
 
 ---
@@ -39,10 +39,10 @@ sh start-backend.sh
 
 Le script :
 1. Démarre PostgreSQL (port hôte **5433**) et RabbitMQ
-2. Crée les bases de données (`auth_db`, `user_db`, `logement_db`, `reservation_db`, `paiement_db`, `messagerie_db`)
+2. Crée les bases de données (`auth_db`, `user_db`, `logement_db`, `reservation_db`, `payment_db`, `messagerie_db`)
 3. Compile et installe tous les modules Maven
 4. Démarre Eureka (discover) en premier
-5. Démarre les services métier dans l'ordre (auth → user, logement, reservation, paiement, messagerie → gateway)
+5. Démarre les services métier dans l'ordre (auth → user, logement, reservation, payment, messagerie → gateway)
 6. Vérifie que chaque service répond
 
 ### Frontend
@@ -52,6 +52,64 @@ cd src/front-end
 npm install
 npm start
 ```
+
+---
+
+## Comptes de test
+
+### Compte administrateur (cree automatiquement au demarrage)
+
+| Champ        | Valeur                          |
+|--------------|---------------------------------|
+| Email        | `admin@gestion-logement.local`  |
+| Mot de passe | `Admin@12345`                   |
+| Role         | ADMIN                           |
+
+> Ce compte est cree automatiquement au premier demarrage du service auth. Si les variables d'environnement `DEFAULT_ADMIN_EMAIL` et `DEFAULT_ADMIN_PASSWORD` sont definies, elles remplacent les valeurs par defaut.
+
+### Comptes a creer via l'API (inscription)
+
+Pour tester les differents roles, inscrivez-vous via `POST /api/v1/auth/register` :
+
+```json
+{
+  "email": "client@test.com",
+  "password": "Client@12345",
+  "nom": "Dupont",
+  "prenom": "Jean",
+  "role": "CLIENT"
+}
+```
+
+```json
+{
+  "email": "proprietaire@test.com",
+  "password": "Proprio@12345",
+  "nom": "Kamga",
+  "prenom": "Paul",
+  "role": "PROPRIETAIRE"
+}
+```
+
+### Cartes bancaires de test (paiement simule)
+
+| Numero             | Resultat          |
+|--------------------|-------------------|
+| `4242 4242 4242 4242` | Paiement accepte   |
+| `4000 0000 0000 0002` | Carte refusee      |
+| `4000 0000 0000 9995` | Fonds insuffisants |
+
+- **Expiration** : toute date future (ex: `12/30`)
+- **CVV** : tout code a 3 chiffres (ex: `123`)
+
+### Acces infrastructure
+
+| Service    | URL                        | Identifiants            |
+|------------|----------------------------|-------------------------|
+| RabbitMQ   | http://localhost:15672      | `immobilier` / `secret` |
+| PostgreSQL | `localhost:5433`           | `immobilier` / `secret` |
+| MailHog    | http://localhost:8025       | aucun                   |
+| Eureka     | http://localhost:8761       | aucun                   |
 
 ---
 
@@ -91,7 +149,7 @@ tail -f /tmp/auth.log        # Authentification
 tail -f /tmp/user.log        # Utilisateurs
 tail -f /tmp/logement.log    # Logements
 tail -f /tmp/reservation.log # Réservations
-tail -f /tmp/paiement.log    # Paiements
+tail -f /tmp/payment.log    # payments
 tail -f /tmp/messagerie.log  # Messagerie
 tail -f /tmp/gateway.log     # Gateway
 ```

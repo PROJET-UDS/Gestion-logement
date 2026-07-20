@@ -79,6 +79,9 @@ public class UserProfileServiceImpl implements UserProfileService {
                         .build());
 
         profile.setEmail(event.getEmail());
+        if (event.getNom() != null && !event.getNom().isBlank()) {
+            profile.setNomComplet(event.getNom());
+        }
         profile.setRole(parseRole(event.getRole()));
         profile.setActif(true);
 

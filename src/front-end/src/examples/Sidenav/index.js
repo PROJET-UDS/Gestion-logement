@@ -16,7 +16,7 @@ Coded by www.creative-tim.com
 import { useEffect } from "react";
 
 // react-router-dom components
-import { useLocation, NavLink } from "react-router-dom";
+import { useLocation, NavLink, useNavigate } from "react-router-dom";
 
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
@@ -47,10 +47,14 @@ import {
   setWhiteSidenav,
 } from "context";
 
+import { logout } from "services/authService";
+
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
   const location = useLocation();
+  const navigate = useNavigate();
+  const handleLogout = () => { logout(); navigate("/"); };
   const collapseName = location.pathname.replace("/", "");
 
   let textColor = "white";
@@ -181,15 +185,28 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       <List>{renderRoutes}</List>
       <MDBox p={2} mt="auto">
         <MDButton
-          component="a"
-          href="https://www.creative-tim.com/product/material-dashboard-pro-react"
-          target="_blank"
-          rel="noreferrer"
-          variant="gradient"
-          color={sidenavColor}
+          variant="text"
+          color={textColor === "white" ? "white" : "dark"}
           fullWidth
+          onClick={() => navigate("/")}
+          sx={{ justifyContent: "flex-start", mb: 1 }}
         >
-          upgrade to pro
+          <Icon sx={{ mr: 1 }}>home</Icon>
+          <MDTypography variant="button" color={textColor === "white" ? "white" : "dark"} textTransform="none">
+            Retour à l&apos;accueil
+          </MDTypography>
+        </MDButton>
+        <MDButton
+          variant="text"
+          color={textColor === "white" ? "white" : "dark"}
+          fullWidth
+          onClick={handleLogout}
+          sx={{ justifyContent: "flex-start" }}
+        >
+          <Icon sx={{ mr: 1 }}>logout</Icon>
+          <MDTypography variant="button" color={textColor === "white" ? "white" : "dark"} textTransform="none">
+            Déconnexion
+          </MDTypography>
         </MDButton>
       </MDBox>
     </SidenavRoot>

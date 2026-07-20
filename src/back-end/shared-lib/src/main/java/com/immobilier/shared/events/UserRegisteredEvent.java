@@ -6,6 +6,7 @@ public class UserRegisteredEvent {
     public static final String TOPIC = "user.registered";
     private String userId;
     private String email;
+    private String nom;
     private String role;
     private Instant occurredAt;
 }

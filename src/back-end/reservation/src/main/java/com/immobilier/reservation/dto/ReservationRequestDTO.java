@@ -21,13 +21,12 @@ public class ReservationRequestDTO {
     @Future(message = "La date de fin doit être dans le futur")
     private LocalDate dateFin;
 
-    public Long getLogementId() {
-        return logementId;
-    }
+    private String methodepayment;
 
-    public void setLogementId(Long logementId) {
-        this.logementId = logementId;
-    }
+    private String phoneNumber;
+
+    public Long getLogementId() { return logementId; }
+    public void setLogementId(Long logementId) { this.logementId = logementId; }
 
     public String getClientId() {
         return clientId;
@@ -37,20 +36,15 @@ public class ReservationRequestDTO {
         this.clientId = clientId;
     }
 
-    public LocalDate getDateDebut() {
-        return dateDebut;
-    }
+    public LocalDate getDateDebut() { return dateDebut; }
+    public void setDateDebut(LocalDate dateDebut) { this.dateDebut = dateDebut; }
 
-    public void setDateDebut(LocalDate dateDebut) {
-        this.dateDebut = dateDebut;
-    }
+    public LocalDate getDateFin() { return dateFin; }
+    public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
 
-    public LocalDate getDateFin() {
-        return dateFin;
-    }
+    public String getMethodepayment() { return methodepayment; }
+    public void setMethodepayment(String methodepayment) { this.methodepayment = methodepayment; }
 
-    public void setDateFin(LocalDate dateFin) {
-        this.dateFin = dateFin;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 }
-

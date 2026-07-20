@@ -13,6 +13,7 @@ public class RabbitMQConfig {
 
     // Exchange
     public static final String AUTH_EXCHANGE = "auth.exchange";
+    public static final String EVENTS_EXCHANGE = "gestion-logement.events";
 
     // Routing keys
     public static final String USER_REGISTERED_KEY   = "auth.user.registered";
@@ -24,10 +25,15 @@ public class RabbitMQConfig {
     public static final String USER_LOGGED_IN_QUEUE    = "auth.user.loggedin";
     public static final String USER_ROLE_CHANGED_QUEUE = "auth.user.role.changed";
 
-    // Exchange
+    // Exchanges
     @Bean
     public TopicExchange authExchange() {
         return new TopicExchange(AUTH_EXCHANGE);
+    }
+
+    @Bean
+    public TopicExchange eventsExchange() {
+        return new TopicExchange(EVENTS_EXCHANGE);
     }
 
     // Queues

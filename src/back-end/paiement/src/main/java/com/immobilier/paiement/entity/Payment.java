@@ -24,11 +24,12 @@ public class Payment {
     private Long reservationId;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(nullable = false)
     private Double amount;
 
+    @Builder.Default
     @Column(nullable = false)
     private String currency = "XAF";
 
@@ -40,11 +41,20 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    @Column(nullable = false)
     private String phoneNumber;
 
     @Column(unique = true)
     private String transactionRef;
+
+    @Column(length = 4)
+    private String cardLastFour;
+
+    private String cardBrand;
+
+    private String failureReason;
+
+    @Column(unique = true)
+    private String idempotencyKey;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
