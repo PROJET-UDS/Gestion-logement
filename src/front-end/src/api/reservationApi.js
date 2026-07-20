@@ -1,7 +1,9 @@
 import { getAccessToken } from "services/authService";
 
 const API_BASE_URL =
-  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  (typeof process !== "undefined" &&
+    process.env &&
+    process.env.REACT_APP_API_BASE_URL) ||
   "http://localhost:8089";
 
 function authHeaders() {
@@ -24,7 +26,9 @@ export async function creerReservation(data) {
 
 export async function payerReservation(id, methodepayment) {
   const response = await fetch(
-    `${API_BASE_URL}/api/reservations/${id}/payer?methodepayment=${encodeURIComponent(methodepayment)}`,
+    `${API_BASE_URL}/api/reservations/${id}/payer?methodepayment=${encodeURIComponent(
+      methodepayment
+    )}`,
     {
       method: "POST",
       headers: { ...authHeaders() },
@@ -38,18 +42,37 @@ export async function payerReservation(id, methodepayment) {
 }
 
 export async function getMesReservations() {
-  const response = await fetch(`${API_BASE_URL}/api/reservations/mes-reservations`, {
-    headers: { ...authHeaders() },
-  });
-  if (!response.ok) throw new Error("Erreur lors du chargement des réservations");
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/mes-reservations`,
+    {
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!response.ok)
+    throw new Error("Erreur lors du chargement des réservations");
+  return response.json();
+}
+
+export async function getReservationsProprietaire() {
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/proprietaire`,
+    {
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!response.ok)
+    throw new Error("Erreur lors du chargement des réservations reçues");
   return response.json();
 }
 
 export async function annulerReservation(id) {
-  const response = await fetch(`${API_BASE_URL}/api/reservations/${id}/annuler`, {
-    method: "PATCH",
-    headers: { ...authHeaders() },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/${id}/annuler`,
+    {
+      method: "PATCH",
+      headers: { ...authHeaders() },
+    }
+  );
   if (!response.ok) {
     const err = await response.json().catch(() => null);
     throw new Error(err?.message || "Erreur lors de l'annulation");
@@ -59,7 +82,9 @@ export async function annulerReservation(id) {
 
 export async function payerLeReste(id, methode) {
   const response = await fetch(
-    `${API_BASE_URL}/api/reservations/${id}/payer-le-reste?methodepayment=${encodeURIComponent(methode)}`,
+    `${API_BASE_URL}/api/reservations/${id}/payer-le-reste?methodepayment=${encodeURIComponent(
+      methode
+    )}`,
     {
       method: "POST",
       headers: { ...authHeaders() },
@@ -73,10 +98,13 @@ export async function payerLeReste(id, methode) {
 }
 
 export async function rembourserReservation(id) {
-  const response = await fetch(`${API_BASE_URL}/api/reservations/${id}/rembourser`, {
-    method: "POST",
-    headers: { ...authHeaders() },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/reservations/${id}/rembourser`,
+    {
+      method: "POST",
+      headers: { ...authHeaders() },
+    }
+  );
   if (!response.ok) {
     const err = await response.json().catch(() => null);
     throw new Error(err?.message || "Erreur lors du remboursement");

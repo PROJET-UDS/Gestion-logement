@@ -1,13 +1,26 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentification/components/BasicLayout";
-import bgImage from "assets/images/bg-sign-in-basic.jpeg";
-import { getDefaultRouteForRole, login, saveAuthSession } from "services/authService";
+import {
+  getDefaultRouteForRole,
+  login,
+  saveAuthSession,
+} from "services/authService";
+
+const HOUSE_BG = "/images/billboard.jpg";
+
+const getSafeRedirect = (redirect) =>
+  redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : null;
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -25,9 +38,12 @@ function SignIn() {
     setLoading(true);
 
     try {
-      const data = await login({ email, password });
+      const data = await login({ email: email.trim(), password });
       const session = saveAuthSession(data);
-      const redirectTo = redirectParam || location.state?.from?.pathname || getDefaultRouteForRole(session.role);
+      const redirectTo =
+        getSafeRedirect(redirectParam) ||
+        getSafeRedirect(location.state?.from?.pathname) ||
+        getDefaultRouteForRole(session.role);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Email ou mot de passe incorrect");
@@ -37,18 +53,17 @@ function SignIn() {
   };
 
   return (
-    <BasicLayout image={bgImage}>
+    <BasicLayout image={HOUSE_BG}>
       <Card>
         <MDBox
           variant="gradient"
-          bgColor="info"
           borderRadius="lg"
-          coloredShadow="info"
           mx={2}
           mt={-3}
           p={2}
           mb={1}
           textAlign="center"
+          sx={{ background: "linear-gradient(195deg, #1a1a2e, #16213e)" }}
         >
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
             Connexion
@@ -63,6 +78,8 @@ function SignIn() {
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -72,6 +89,8 @@ function SignIn() {
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
               />
             </MDBox>
             <MDBox textAlign="right" mb={2}>
@@ -79,7 +98,7 @@ function SignIn() {
                 component={Link}
                 to="/authentification/reset-password"
                 variant="button"
-                color="info"
+                color="warning"
                 fontWeight="medium"
               >
                 Mot de passe oublié ?
@@ -91,7 +110,13 @@ function SignIn() {
               </MDTypography>
             )}
             <MDBox mt={4} mb={1}>
-              <MDButton type="submit" variant="gradient" color="info" fullWidth disabled={loading}>
+              <MDButton
+                type="submit"
+                variant="gradient"
+                color="warning"
+                fullWidth
+                disabled={loading}
+              >
                 {loading ? "Connexion..." : "Se connecter"}
               </MDButton>
             </MDBox>
@@ -102,7 +127,7 @@ function SignIn() {
                   component={Link}
                   to="/authentification/sign-up"
                   variant="button"
-                  color="info"
+                  color="warning"
                   fontWeight="medium"
                 >
                   S&apos;inscrire

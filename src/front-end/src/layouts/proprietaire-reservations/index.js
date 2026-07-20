@@ -13,11 +13,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import Footer from "examples/Footer";
-import { authHeaders } from "services/authService";
-
-const API_BASE_URL =
-  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
-  "http://localhost:8089";
+import { getReservationsProprietaire } from "api/reservationApi";
 
 const STATUT_COLORS = {
   EN_ATTENTE: "warning",
@@ -43,11 +39,7 @@ function ProprietaireReservations() {
 
   const loadReservations = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/reservations/proprietaire`, {
-        headers: { ...authHeaders() },
-      });
-      if (!res.ok) throw new Error("Erreur lors du chargement");
-      const data = await res.json();
+      const data = await getReservationsProprietaire();
       setReservations(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
@@ -56,18 +48,20 @@ function ProprietaireReservations() {
     }
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString("fr-FR") : "-";
+  const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
         <MDTypography variant="h4" fontWeight="medium" mb={3}>
-          Reservations de mes logements
+          Réservations de mes logements
         </MDTypography>
         {error && (
           <MDBox mb={2} p={2} bgColor="error" borderRadius="md">
-            <MDTypography variant="body2" color="white">{error}</MDTypography>
+            <MDTypography variant="body2" color="white">
+              {error}
+            </MDTypography>
           </MDBox>
         )}
         {loading ? (
@@ -92,23 +86,39 @@ function ProprietaireReservations() {
                   {reservations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} align="center">
-                        Aucune reservation pour vos logements
+                        Aucune réservation pour vos logements
                       </TableCell>
                     </TableRow>
                   ) : (
                     reservations.map((r) => (
                       <TableRow key={r.id}>
-                        <TableCell>{r.logementTitre || `Logement #${r.logementId}`}</TableCell>
+                        <TableCell>
+                          {r.logementTitre || `Logement #${r.logementId}`}
+                        </TableCell>
                         <TableCell>{r.clientNom || r.clientId}</TableCell>
-                        <TableCell>{formatDate(r.dateDebut)} - {formatDate(r.dateFin)}</TableCell>
                         <TableCell>
-                          {r.prixLogement ? `${Number(r.prixLogement).toLocaleString("fr-FR")} FCFA` : "-"}
+                          {formatDate(r.dateDebut)} - {formatDate(r.dateFin)}
                         </TableCell>
                         <TableCell>
-                          <Chip label={r.statut} color={STATUT_COLORS[r.statut] || "default"} size="small" />
+                          {r.prixLogement
+                            ? `${Number(r.prixLogement).toLocaleString(
+                                "fr-FR"
+                              )} FCFA`
+                            : "-"}
                         </TableCell>
                         <TableCell>
-                          <Chip label={r.paymentStatut} color={PAYMENT_COLORS[r.paymentStatut] || "default"} size="small" />
+                          <Chip
+                            label={r.statut}
+                            color={STATUT_COLORS[r.statut] || "default"}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={r.paymentStatut}
+                            color={PAYMENT_COLORS[r.paymentStatut] || "default"}
+                            size="small"
+                          />
                         </TableCell>
                       </TableRow>
                     ))

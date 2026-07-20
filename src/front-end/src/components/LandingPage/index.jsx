@@ -1,295 +1,466 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import Icon from "@mui/material/Icon";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import CircularProgress from "@mui/material/CircularProgress";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
-import Button from "@mui/material/Button";
-import Avatar from "@mui/material/Avatar";
-import Menu from "@mui/material/Menu";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Divider from "@mui/material/Divider";
+import Icon from "@mui/material/Icon";
+
+import { PublicFooter, PublicHeader } from "components/PublicSiteChrome";
 import PageLayout from "examples/LayoutContainers/PageLayout";
-import { getLogementsPublic, getFileUrl } from "api/logementApi";
-import { isAuthenticated, getUserRole, logout, getUserId } from "services/authService";
+import { getFileUrl, getLogementsPublic } from "api/logementApi";
+import { getUserRole, isAuthenticated } from "services/authService";
+
+import "./styles.css";
+
+const CITY_OPTIONS = [
+  "Dschang",
+  "Yaoundé",
+  "Douala",
+  "Bafoussam",
+  "Bamenda",
+  "Garoua",
+  "Maroua",
+];
+
+const TYPE_LABELS = {
+  APPARTEMENT: "Appartement",
+  MAISON: "Maison",
+  STUDIO: "Studio",
+  CHAMBRE: "Chambre",
+};
 
 function LandingPage() {
   const navigate = useNavigate();
   const [logements, setLogements] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [loadError, setLoadError] = useState("");
   const [searchVille, setSearchVille] = useState("");
   const [searchType, setSearchType] = useState("");
   const [searchTransaction, setSearchTransaction] = useState("");
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const openMenu = Boolean(anchorEl);
-  const handleOpenMenu = (e) => setAnchorEl(e.currentTarget);
-  const handleCloseMenu = () => setAnchorEl(null);
-  const authenticated = isAuthenticated();
-  const role = getUserRole();
-
-  const handleMenuClick = (path) => {
-    handleCloseMenu();
-    navigate(path);
-  };
-
-  const handleLogout = () => {
-    handleCloseMenu();
-    logout();
-    navigate("/");
-  };
-
   useEffect(() => {
+    let active = true;
+
     getLogementsPublic()
-      .then((data) => setLogements(data.slice(0, 6)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (active) {
+          setLogements(Array.isArray(data) ? data.slice(0, 6) : []);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLoadError("Les logements ne sont pas disponibles pour le moment.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleSearch = (event) => {
+    event.preventDefault();
     const params = new URLSearchParams();
     if (searchVille) params.set("ville", searchVille);
     if (searchType) params.set("typeLogement", searchType);
     if (searchTransaction) params.set("typeTransaction", searchTransaction);
-    navigate(`/annonces${params.toString() ? "?" + params.toString() : ""}`);
+    navigate(`/annonces${params.toString() ? `?${params.toString()}` : ""}`);
   };
+
+  const reservationPath = (logementId) => {
+    if (!isAuthenticated()) {
+      return `/authentification/sign-up?reserver=${logementId}`;
+    }
+    return getUserRole() === "CLIENT"
+      ? `/annonces/${logementId}?reserver=1`
+      : null;
+  };
+
+  const accountPath = isAuthenticated()
+    ? "/dashboard"
+    : "/authentification/sign-up";
 
   return (
     <PageLayout>
-      <div style={{ fontFamily: "sans-serif", margin: 0, padding: 0 }}>
+      <div className="landing-page">
+        <PublicHeader active="home" />
 
-        <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000, boxSizing: "border-box" }}>
-          <h1 style={{ color: "#f0a500", fontSize: "50px", fontWeight: "bold", margin: 0 }}>SearcHome</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="#accueil" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Accueil</a>
-            <a href="#proprietes" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Propriétés</a>
-            <a href="#apropos" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>À propos</a>
-            <a href="#contact" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Contact</a>
-            {authenticated ? (
-              <>
-                <Avatar
-                  onClick={handleOpenMenu}
-                  sx={{ bgcolor: "#f0a500", cursor: "pointer", width: 36, height: 36, fontSize: 16, fontWeight: "bold", marginLeft: 2 }}
-                >
-                  {role ? role.charAt(0) : "U"}
-                </Avatar>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={openMenu}
-                  onClose={handleCloseMenu}
-                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                  transformOrigin={{ vertical: "top", horizontal: "right" }}
-                  PaperProps={{ sx: { minWidth: 180, mt: 1 } }}
-                >
-                  <MenuItem onClick={() => handleMenuClick("/dashboard")}>
-                    <ListItemIcon><Icon fontSize="small">dashboard</Icon></ListItemIcon>
-                    Dashboard
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMenuClick("/profile")}>
-                    <ListItemIcon><Icon fontSize="small">person</Icon></ListItemIcon>
-                    Profil
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMenuClick("/mes-reservations")}>
-                    <ListItemIcon><Icon fontSize="small">book_online</Icon></ListItemIcon>
-                    Mes reservations
-                  </MenuItem>
-                  <MenuItem onClick={() => handleMenuClick("/billing")}>
-                    <ListItemIcon><Icon fontSize="small">receipt_long</Icon></ListItemIcon>
-                    Paiements
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem onClick={handleLogout}>
-                    <ListItemIcon><Icon fontSize="small">logout</Icon></ListItemIcon>
-                    Deconnexion
-                  </MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <>
-                <Link to="/authentification/sign-in" style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", marginLeft: 10 }}>Connexion</Link>
-                <Link to="/authentification/sign-up" style={{ backgroundColor: "transparent", color: "white", padding: "10px 20px", borderRadius: "25px", textDecoration: "none", border: "1px solid white", marginLeft: 10 }}>Inscription</Link>
-              </>
-            )}
-          </div>
-        </nav>
+        <main>
+          <section
+            className="landing-hero"
+            id="accueil"
+            style={{ backgroundImage: "url('/images/billboard.jpg')" }}
+          >
+            <div className="landing-hero__overlay" />
+            <div className="landing-container landing-hero__content">
+              <div className="landing-hero__copy">
+                <span className="landing-eyebrow">
+                  <Icon>verified</Icon>
+                  Votre logement, en toute confiance
+                </span>
+                <h1>
+                  Trouvez un lieu qui vous <span>ressemble.</span>
+                </h1>
+                <p>
+                  Explorez des logements vérifiés au Cameroun, réservez en
+                  quelques étapes et gérez tout depuis un espace unique.
+                </p>
+                <div className="landing-hero__actions">
+                  <a
+                    className="public-button public-button--accent"
+                    href="#proprietes"
+                  >
+                    Voir les logements
+                    <Icon>arrow_forward</Icon>
+                  </a>
+                  <Link className="landing-text-link" to={accountPath}>
+                    {isAuthenticated()
+                      ? "Ouvrir mon espace"
+                      : "Je suis propriétaire"}
+                  </Link>
+                </div>
+              </div>
 
-        <div id="accueil" style={{ backgroundColor: "#1a1a2e", padding: "150px 50px 100px", textAlign: "left", minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", boxSizing: "border-box" }}>
-          <h2 style={{ color: "white", fontSize: "56px", fontWeight: "bold", marginBottom: 20 }}>Trouvez Votre<br/>Logement Idéal</h2>
-          <p style={{ color: "#ccc", fontSize: 18, marginBottom: 40, maxWidth: 600 }}>Plateforme de gestion de logements simple et efficace. Trouvez, réservez et gérez vos logements en toute simplicité.</p>
-
-          <form onSubmit={handleSearch} style={{ backgroundColor: "white", padding: 24, borderRadius: 16, display: "flex", gap: 12, maxWidth: 750, flexWrap: "wrap" }}>
-            <TextField
-              select
-              value={searchTransaction}
-              onChange={(e) => setSearchTransaction(e.target.value)}
-              label="Objectif"
-              size="small"
-              sx={{ flex: 1, minWidth: 140 }}
-            >
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="LOCATION">Louer</MenuItem>
-              <MenuItem value="VENTE">Acheter</MenuItem>
-            </TextField>
-            <TextField
-              select
-              value={searchVille}
-              onChange={(e) => setSearchVille(e.target.value)}
-              label="Localisation"
-              size="small"
-              sx={{ flex: 1, minWidth: 140 }}
-            >
-              <MenuItem value="">Toutes</MenuItem>
-              <MenuItem value="Yaoundé">Yaoundé</MenuItem>
-              <MenuItem value="Douala">Douala</MenuItem>
-              <MenuItem value="Bafoussam">Bafoussam</MenuItem>
-              <MenuItem value="Bamenda">Bamenda</MenuItem>
-            </TextField>
-            <TextField
-              select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-              label="Type"
-              size="small"
-              sx={{ flex: 1, minWidth: 140 }}
-            >
-              <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="APPARTEMENT">Appartement</MenuItem>
-              <MenuItem value="MAISON">Villa</MenuItem>
-              <MenuItem value="STUDIO">Studio</MenuItem>
-              <MenuItem value="CHAMBRE">Chambre</MenuItem>
-            </TextField>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ backgroundColor: "#f0a500", "&:hover": { backgroundColor: "#d49400" }, px: 4, fontWeight: "bold", minWidth: 140 }}
-            >
-              Rechercher
-            </Button>
-          </form>
-        </div>
-
-        <div id="proprietes" style={{ padding: "80px 50px", backgroundColor: "#f8f9fa" }}>
-          <h2 style={{ textAlign: "center", fontSize: 36, marginBottom: 10 }}>Nos Propriétés</h2>
-          <p style={{ textAlign: "center", color: "#666", marginBottom: 50 }}>Découvrez nos logements disponibles</p>
-
-          {loading ? (
-            <div style={{ textAlign: "center", padding: 40 }}>
-              <CircularProgress />
-            </div>
-          ) : logements.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
-              <Icon sx={{ fontSize: 60, color: "#ccc" }}>home</Icon>
-              <p style={{ marginTop: 10 }}>Aucun logement disponible pour le moment</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 30, justifyContent: "center", flexWrap: "wrap" }}>
-              {logements.map((logement) => (
-                <div
-                  key={logement.id}
-                  onClick={() => navigate(`/annonces/${logement.id}`)}
-                  style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 300, boxShadow: "0 4px 15px rgba(0,0,0,0.1)", cursor: "pointer" }}
-                >
-                  {logement.medias && logement.medias.length > 0 ? (
-                    <img
-                      src={getFileUrl(logement.medias[0].fileUrl)}
-                      alt={logement.titre}
-                      style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div style={{ backgroundColor: "#1a1a2e", height: 200, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ color: "#f0a500", fontSize: 50 }}>&#127968;</span>
-                    </div>
-                  )}
-                  <span style={{ backgroundColor: "#f0a500", color: "white", padding: "5px 10px", borderRadius: 5, fontSize: 12, display: "inline-block", marginTop: 10 }}>
-                    {logement.typeLogement}
+              <form className="landing-search" onSubmit={handleSearch}>
+                <div className="landing-search__heading">
+                  <div>
+                    <span>Recherche rapide</span>
+                    <strong>Quel logement cherchez-vous ?</strong>
+                  </div>
+                  <span className="landing-search__icon" aria-hidden="true">
+                    <Icon>search</Icon>
                   </span>
-                  <h3 style={{ marginTop: 10, fontSize: 18 }}>{logement.titre}</h3>
-                  <p style={{ color: "#666" }}>&#128205; {logement.ville}{logement.quartier ? `, ${logement.quartier}` : ""}</p>
-                  <p style={{ color: "#f0a500", fontWeight: "bold", fontSize: 18 }}>
-                    {Number(logement.prix).toLocaleString("fr-FR")} FCFA
-                    {logement.typeTransaction === "LOCATION" && <span style={{ fontWeight: "normal", fontSize: 12 }}>/mois</span>}
-                  </p>
-                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/annonces/${logement.id}`); }}
-                      style={{ backgroundColor: "#1a1a2e", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1 }}
+                </div>
+                <div className="landing-search__fields">
+                  <label>
+                    <span>Projet</span>
+                    <select
+                      value={searchTransaction}
+                      onChange={(event) =>
+                        setSearchTransaction(event.target.value)
+                      }
                     >
-                      Voir détails
-                    </button>
-                    {logement.typeTransaction === "LOCATION" && (() => {
-                      if (!isAuthenticated()) {
-                        return (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); navigate(`/authentification/sign-up?reserver=${logement.id}`); }}
-                            style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1, fontWeight: "bold" }}
-                          >
-                            Réserver
-                          </button>
-                        );
-                      }
-                      if (getUserRole() === "CLIENT") {
-                        return (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); navigate(`/annonces/${logement.id}?reserver=1`); }}
-                            style={{ backgroundColor: "#f0a500", color: "white", padding: "10px 20px", borderRadius: 5, border: "none", cursor: "pointer", flex: 1, fontWeight: "bold" }}
-                          >
-                            Réserver
-                          </button>
-                        );
-                      }
-                      return null;
-                    })()}
+                      <option value="">Louer ou acheter</option>
+                      <option value="LOCATION">Louer</option>
+                      <option value="VENTE">Acheter</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Localisation</span>
+                    <select
+                      value={searchVille}
+                      onChange={(event) => setSearchVille(event.target.value)}
+                    >
+                      <option value="">Toutes les villes</option>
+                      {CITY_OPTIONS.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Type de bien</span>
+                    <select
+                      value={searchType}
+                      onChange={(event) => setSearchType(event.target.value)}
+                    >
+                      <option value="">Tous les types</option>
+                      {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <button
+                  className="public-button public-button--accent landing-search__submit"
+                  type="submit"
+                >
+                  <Icon>search</Icon>
+                  Rechercher
+                </button>
+              </form>
+            </div>
+
+            <div className="landing-container landing-proof">
+              <div>
+                <Icon>verified_user</Icon>
+                <span>
+                  <strong>Annonces validées</strong> avant publication
+                </span>
+              </div>
+              <div>
+                <Icon>payments</Icon>
+                <span>
+                  <strong>Paiements suivis</strong> depuis votre espace
+                </span>
+              </div>
+              <div>
+                <Icon>support_agent</Icon>
+                <span>
+                  <strong>Parcours simple</strong> pour chaque profil
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="landing-section landing-properties"
+            id="proprietes"
+          >
+            <div className="landing-container">
+              <div className="landing-section__heading">
+                <div>
+                  <span className="landing-kicker">Sélection du moment</span>
+                  <h2>Des logements prêts à vous accueillir</h2>
+                  <p>
+                    Découvrez les dernières annonces publiées sur la plateforme.
+                  </p>
+                </div>
+                <Link
+                  className="public-button public-button--outline"
+                  to="/annonces"
+                >
+                  Toutes les annonces
+                  <Icon>arrow_forward</Icon>
+                </Link>
+              </div>
+
+              {loading ? (
+                <div className="landing-state">
+                  <CircularProgress sx={{ color: "#f2a900" }} />
+                  <span>Chargement des logements…</span>
+                </div>
+              ) : loadError ? (
+                <div className="landing-state landing-state--error">
+                  <Icon>cloud_off</Icon>
+                  <strong>Connexion momentanément indisponible</strong>
+                  <span>{loadError}</span>
+                  <Link
+                    className="public-button public-button--small"
+                    to="/annonces"
+                  >
+                    Réessayer sur la page des annonces
+                  </Link>
+                </div>
+              ) : logements.length === 0 ? (
+                <div className="landing-state">
+                  <Icon>holiday_village</Icon>
+                  <strong>Aucun logement disponible</strong>
+                  <span>De nouvelles annonces seront bientôt publiées.</span>
+                </div>
+              ) : (
+                <div className="landing-property-grid">
+                  {logements.map((logement) => {
+                    const reserveTo =
+                      logement.typeTransaction === "LOCATION"
+                        ? reservationPath(logement.id)
+                        : null;
+
+                    return (
+                      <article
+                        className="landing-property-card"
+                        key={logement.id}
+                      >
+                        <Link
+                          className="landing-property-card__media"
+                          to={`/annonces/${logement.id}`}
+                          aria-label={`Voir ${logement.titre}`}
+                        >
+                          {logement.medias?.length > 0 ? (
+                            <img
+                              src={getFileUrl(logement.medias[0].fileUrl)}
+                              alt={logement.titre}
+                            />
+                          ) : (
+                            <span className="landing-property-card__placeholder">
+                              <Icon>holiday_village</Icon>
+                            </span>
+                          )}
+                          <span className="landing-property-card__type">
+                            {TYPE_LABELS[logement.typeLogement] ||
+                              logement.typeLogement}
+                          </span>
+                          <span className="landing-property-card__transaction">
+                            {logement.typeTransaction === "VENTE"
+                              ? "À vendre"
+                              : "À louer"}
+                          </span>
+                        </Link>
+                        <div className="landing-property-card__body">
+                          <div className="landing-property-card__location">
+                            <Icon>location_on</Icon>
+                            {logement.ville}
+                            {logement.quartier ? ` · ${logement.quartier}` : ""}
+                          </div>
+                          <Link to={`/annonces/${logement.id}`}>
+                            <h3>{logement.titre}</h3>
+                          </Link>
+                          <div className="landing-property-card__meta">
+                            {logement.nbPieces && (
+                              <span>
+                                <Icon>meeting_room</Icon>
+                                {logement.nbPieces} pièces
+                              </span>
+                            )}
+                            {logement.superficie && (
+                              <span>
+                                <Icon>square_foot</Icon>
+                                {logement.superficie} m²
+                              </span>
+                            )}
+                          </div>
+                          <div className="landing-property-card__footer">
+                            <div className="landing-property-card__price">
+                              <strong>
+                                {Number(logement.prix || 0).toLocaleString(
+                                  "fr-FR"
+                                )}{" "}
+                                FCFA
+                              </strong>
+                              {logement.typeTransaction === "LOCATION" && (
+                                <span>par mois</span>
+                              )}
+                            </div>
+                            <div className="landing-property-card__actions">
+                              <Link
+                                className="landing-icon-button"
+                                to={`/annonces/${logement.id}`}
+                                aria-label={`Voir les détails de ${logement.titre}`}
+                              >
+                                <Icon>arrow_outward</Icon>
+                              </Link>
+                              {reserveTo && (
+                                <Link
+                                  className="landing-icon-button landing-icon-button--accent"
+                                  to={reserveTo}
+                                  aria-label={`Réserver ${logement.titre}`}
+                                >
+                                  <Icon>calendar_month</Icon>
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="landing-section landing-about" id="apropos">
+            <div className="landing-container landing-about__grid">
+              <div className="landing-about__visual">
+                <img
+                  src="/images/item-large1.jpg"
+                  alt="Intérieur d’un logement moderne"
+                />
+                <div className="landing-about__badge">
+                  <Icon>handshake</Icon>
+                  <span>
+                    <strong>Un parcours transparent</strong> de l’annonce à la
+                    réservation
+                  </span>
+                </div>
+              </div>
+              <div className="landing-about__copy">
+                <span className="landing-kicker">Pourquoi SearchHome ?</span>
+                <h2>Une plateforme pensée pour locataires et propriétaires</h2>
+                <p>
+                  SearchHome centralise les annonces, les demandes de
+                  réservation et le suivi des paiements. Chacun dispose d’un
+                  espace adapté à ses besoins, sans démarches dispersées.
+                </p>
+                <div className="landing-feature-list">
+                  <div>
+                    <span>
+                      <Icon>manage_search</Icon>
+                    </span>
+                    <div>
+                      <strong>Recherche précise</strong>
+                      <p>
+                        Filtrez par ville, type de logement, transaction et
+                        budget.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <span>
+                      <Icon>space_dashboard</Icon>
+                    </span>
+                    <div>
+                      <strong>Gestion centralisée</strong>
+                      <p>
+                        Retrouvez logements, réservations et paiements dans
+                        votre tableau de bord.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <span>
+                      <Icon>lock</Icon>
+                    </span>
+                    <div>
+                      <strong>Accès selon votre rôle</strong>
+                      <p>
+                        Chaque utilisateur accède uniquement aux fonctionnalités
+                        qui le concernent.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
+                <Link className="public-button" to={accountPath}>
+                  {isAuthenticated()
+                    ? "Accéder au tableau de bord"
+                    : "Créer mon compte"}
+                  <Icon>arrow_forward</Icon>
+                </Link>
+              </div>
             </div>
-          )}
+          </section>
 
-          {logements.length > 0 && (
-            <div style={{ textAlign: "center", marginTop: 40 }}>
-              <Link to="/annonces" style={{ backgroundColor: "#1a1a2e", color: "white", padding: "15px 30px", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", display: "inline-block" }}>
-                Voir toutes les annonces
-              </Link>
+          <section
+            className="landing-contact"
+            id="contact"
+            style={{
+              backgroundImage:
+                "linear-gradient(105deg, rgba(16, 24, 43, 0.98), rgba(27, 41, 68, 0.9)), url('/images/background.jpg')",
+            }}
+          >
+            <div className="landing-container landing-contact__inner">
+              <div>
+                <span className="landing-kicker">Un nouveau départ</span>
+                <h2>Votre prochain logement est peut-être déjà ici.</h2>
+                <p>
+                  Parcourez les annonces ou créez votre espace pour profiter de
+                  tout le parcours SearchHome.
+                </p>
+              </div>
+              <div className="landing-contact__actions">
+                <Link
+                  className="public-button public-button--accent"
+                  to="/annonces"
+                >
+                  Explorer les annonces
+                </Link>
+                <Link className="landing-contact__secondary" to={accountPath}>
+                  {isAuthenticated()
+                    ? "Mon tableau de bord"
+                    : "Créer un compte"}
+                  <Icon>arrow_forward</Icon>
+                </Link>
+              </div>
             </div>
-          )}
-        </div>
+          </section>
+        </main>
 
-        <div id="apropos" style={{ padding: "80px 50px", backgroundColor: "white", display: "flex", gap: 50, alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
-          <div style={{ maxWidth: 500 }}>
-            <h2 style={{ fontSize: 36, marginBottom: 20 }}>À Propos de Nous</h2>
-            <p style={{ color: "#666", lineHeight: 1.8, marginBottom: 20 }}>Nous sommes une plateforme dédiée à la gestion de logements au Cameroun. Notre mission est de simplifier la recherche et la gestion de logements pour les propriétaires et les locataires.</p>
-            <p style={{ color: "#666", lineHeight: 1.8, marginBottom: 30 }}>Avec notre système, vous pouvez gérer vos propriétés, suivre les paiements et communiquer facilement avec vos locataires.</p>
-            <Link to="/authentification/sign-up" style={{ backgroundColor: "#f0a500", color: "white", padding: "15px 30px", borderRadius: "25px", textDecoration: "none", fontWeight: "bold" }}>Commencer maintenant</Link>
-          </div>
-          <div style={{ backgroundColor: "#1a1a2e", width: 400, height: 300, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 100 }}>&#127969;&#65039;</span>
-          </div>
-        </div>
-
-        <div id="contact" style={{ padding: "80px 50px", backgroundColor: "#f8f9fa", textAlign: "center" }}>
-          <h2 style={{ fontSize: 36, marginBottom: 10 }}>Contactez-Nous</h2>
-          <p style={{ color: "#666", marginBottom: 50 }}>Nous sommes là pour vous aider</p>
-          <div style={{ maxWidth: 600, margin: "0 auto" }}>
-            <input type="text" placeholder="Votre nom" style={{ width: "100%", padding: 15, marginBottom: 15, borderRadius: 5, border: "1px solid #ccc", boxSizing: "border-box" }} />
-            <input type="email" placeholder="Votre email" style={{ width: "100%", padding: 15, marginBottom: 15, borderRadius: 5, border: "1px solid #ccc", boxSizing: "border-box" }} />
-            <textarea placeholder="Votre message" rows="5" style={{ width: "100%", padding: 15, marginBottom: 15, borderRadius: 5, border: "1px solid #ccc", boxSizing: "border-box" }}></textarea>
-            <button style={{ backgroundColor: "#f0a500", color: "white", padding: "15px 50px", borderRadius: "25px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: 16 }}>Envoyer</button>
-          </div>
-        </div>
-
-        <footer style={{ backgroundColor: "#1a1a2e", color: "white", padding: 50, textAlign: "center" }}>
-          <h2 style={{ color: "#f0a500", marginBottom: 20 }}>SearcHome</h2>
-          <p style={{ color: "#ccc", marginBottom: 20 }}>Plateforme de gestion de logements</p>
-          <div style={{ marginBottom: 20 }}>
-            <a href="#accueil" style={{ color: "#ccc", marginRight: 20, textDecoration: "none" }}>Accueil</a>
-            <a href="#proprietes" style={{ color: "#ccc", marginRight: 20, textDecoration: "none" }}>Propriétés</a>
-            <a href="#apropos" style={{ color: "#ccc", textDecoration: "none" }}>À propos</a>
-            <a href="#contact" style={{ color: "#ccc", textDecoration: "none" }}>Contact</a>
-          </div>
-          <p style={{ color: "#666", fontSize: 14 }}>&copy; 2026 SearcHome - Tous droits réservés</p>
-        </footer>
+        <PublicFooter />
       </div>
     </PageLayout>
   );

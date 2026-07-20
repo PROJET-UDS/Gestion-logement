@@ -19,14 +19,15 @@ import Footer from "examples/Footer";
 import { authHeaders, getUserRole } from "services/authService";
 
 const API_BASE_URL =
-  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  (typeof process !== "undefined" &&
+    process.env &&
+    process.env.REACT_APP_API_BASE_URL) ||
   "http://localhost:8089";
 
 function Notifications() {
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const [subscribeEmail, setSubscribeEmail] = useState("");
   const [subscribeMsg, setSubscribeMsg] = useState("");
@@ -42,7 +43,7 @@ function Notifications() {
   useEffect(() => {
     if (isAdmin) loadSubscribers();
     else setLoading(false);
-  }, []);
+  }, [isAdmin]);
 
   const loadSubscribers = async () => {
     try {
@@ -137,7 +138,9 @@ function Notifications() {
                   {subscribeMsg && (
                     <MDTypography
                       variant="caption"
-                      color={subscribeMsg.includes("reussie") ? "success" : "error"}
+                      color={
+                        subscribeMsg.includes("reussie") ? "success" : "error"
+                      }
                       display="block"
                       mt={1}
                     >
@@ -190,7 +193,9 @@ function Notifications() {
                     {sendMsg && (
                       <MDTypography
                         variant="caption"
-                        color={sendMsg.includes("envoyee") ? "success" : "error"}
+                        color={
+                          sendMsg.includes("envoyee") ? "success" : "error"
+                        }
                         display="block"
                         mt={1}
                       >
@@ -242,7 +247,9 @@ function Notifications() {
                             <TableRow key={s.id}>
                               <TableCell>{s.email}</TableCell>
                               <TableCell>{s.dateInscription || "-"}</TableCell>
-                              <TableCell>{s.active ? "Actif" : "Inactif"}</TableCell>
+                              <TableCell>
+                                {s.active ? "Actif" : "Inactif"}
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
