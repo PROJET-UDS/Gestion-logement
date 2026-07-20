@@ -11,6 +11,12 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import burceMars from "assets/images/bruce-mars.jpg";
 
+const API_BASE_URL =
+  (typeof process !== "undefined" &&
+    process.env &&
+    process.env.REACT_APP_API_BASE_URL) ||
+  "http://localhost:8089";
+
 function Profile() {
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
@@ -26,10 +32,6 @@ function Profile() {
   const [confirmerMotDePasse, setConfirmerMotDePasse] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
-  const API_BASE_URL =
-    (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
-    "http://localhost:8089";
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -148,7 +150,12 @@ function Profile() {
               <MDBox p={3}>
                 <MDBox display="flex" alignItems="center" mb={3}>
                   <MDBox position="relative">
-                    <MDAvatar src={photo} alt="profile-image" size="xl" shadow="sm" />
+                    <MDAvatar
+                      src={photo}
+                      alt="profile-image"
+                      size="xl"
+                      shadow="sm"
+                    />
                     {isEditing && (
                       <MDBox
                         component="label"
@@ -165,7 +172,11 @@ function Profile() {
                         justifyContent="center"
                         style={{ cursor: "pointer" }}
                       >
-                        <MDTypography variant="button" color="white" fontSize="14px">
+                        <MDTypography
+                          variant="button"
+                          color="white"
+                          fontSize="14px"
+                        >
                           ✎
                         </MDTypography>
                         <input
@@ -223,7 +234,12 @@ function Profile() {
                   </Grid>
 
                   {message && (
-                    <MDTypography variant="caption" color="info" mt={2} display="block">
+                    <MDTypography
+                      variant="caption"
+                      color="info"
+                      mt={2}
+                      display="block"
+                    >
                       {message}
                     </MDTypography>
                   )}
@@ -239,7 +255,11 @@ function Profile() {
                         Modifier
                       </MDButton>
                     ) : (
-                      <MDButton variant="gradient" color="success" type="submit">
+                      <MDButton
+                        variant="gradient"
+                        color="success"
+                        type="submit"
+                      >
                         Enregistrer
                       </MDButton>
                     )}
@@ -256,7 +276,11 @@ function Profile() {
                 <MDTypography variant="h6" fontWeight="medium" mb={2}>
                   Changer le mot de passe
                 </MDTypography>
-                <MDBox component="form" role="form" onSubmit={handleChangePassword}>
+                <MDBox
+                  component="form"
+                  role="form"
+                  onSubmit={handleChangePassword}
+                >
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
                       <MDInput
@@ -288,12 +312,22 @@ function Profile() {
                   </Grid>
 
                   {passwordMessage && (
-                    <MDTypography variant="caption" color="success" mt={2} display="block">
+                    <MDTypography
+                      variant="caption"
+                      color="success"
+                      mt={2}
+                      display="block"
+                    >
                       {passwordMessage}
                     </MDTypography>
                   )}
                   {passwordError && (
-                    <MDTypography variant="caption" color="error" mt={2} display="block">
+                    <MDTypography
+                      variant="caption"
+                      color="error"
+                      mt={2}
+                      display="block"
+                    >
                       {passwordError}
                     </MDTypography>
                   )}

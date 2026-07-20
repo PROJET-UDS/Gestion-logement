@@ -13,6 +13,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import MDAlert from "components/MDAlert";
+import { PublicFooter, PublicHeader } from "components/PublicSiteChrome";
 
 import PageLayout from "examples/LayoutContainers/PageLayout";
 
@@ -42,9 +43,6 @@ function SiteLogementDetail() {
   const [dateFin, setDateFin] = useState("");
   const [methodepayment, setMethodepayment] = useState("VISA");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
   const [reservationLoading, setReservationLoading] = useState(false);
   const [reservationMsg, setReservationMsg] = useState(null);
   const [reservationStatut, setReservationStatut] = useState(null);
@@ -59,7 +57,10 @@ function SiteLogementDetail() {
   useEffect(() => {
     if (reserverAuto && !loading && logement) {
       setTimeout(() => {
-        formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        formRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }, 500);
     }
   }, [reserverAuto, loading, logement]);
@@ -69,13 +70,19 @@ function SiteLogementDetail() {
     setReservationMsg(null);
 
     if (!isAuthenticated()) {
-      navigate("/authentification/sign-in");
+      navigate(
+        `/authentification/sign-in?redirect=${encodeURIComponent(
+          `/annonces/${logement.id}?reserver=1`
+        )}`
+      );
       return;
     }
 
-    if (getUserRole() === "PROPRIETAIRE") {
+    if (getUserRole() !== "CLIENT") {
       setReservationStatut("error");
-      setReservationMsg("Les propriétaires ne peuvent pas réserver de logements.");
+      setReservationMsg(
+        "Seul un compte client peut effectuer une réservation."
+      );
       return;
     }
 
@@ -87,19 +94,15 @@ function SiteLogementDetail() {
 
     if (new Date(dateFin) <= new Date(dateDebut)) {
       setReservationStatut("error");
-      setReservationMsg("La date de fin doit être postérieure à la date de début.");
+      setReservationMsg(
+        "La date de fin doit être postérieure à la date de début."
+      );
       return;
     }
 
-    const isCard = methodepayment === "VISA";
-    if (isCard && (!cardNumber || !cvv || !expiryDate)) {
+    if (methodepayment !== "VISA" && !phoneNumber) {
       setReservationStatut("error");
-      setReservationMsg("Veuillez remplir les informations de la carte");
-      return;
-    }
-    if (!isCard && !phoneNumber) {
-      setReservationStatut("error");
-      setReservationMsg("Veuillez entrer votre numero de telephone");
+      setReservationMsg("Veuillez entrer votre numéro de téléphone.");
       return;
     }
 
@@ -112,17 +115,22 @@ function SiteLogementDetail() {
         methodepayment,
         phoneNumber: methodepayment !== "VISA" ? phoneNumber : undefined,
       });
+      let paymentCompleted = true;
       try {
         await payerReservation(reservation.id, methodepayment);
       } catch (payErr) {
-        // payment optional, reservation created
+        paymentCompleted = false;
       }
       setReservationStatut("success");
-      setReservationMsg("Reservation creee avec succes !");
-      setTimeout(() => navigate("/mes-reservations", { replace: true }), 1500);
+      setReservationMsg(
+        paymentCompleted
+          ? "Réservation créée et paiement enregistré."
+          : "Réservation créée. Le paiement reste à finaliser depuis votre espace."
+      );
+      setTimeout(() => navigate("/mes-reservations", { replace: true }), 1800);
     } catch (err) {
       setReservationStatut("error");
-      setReservationMsg(err.message || "Erreur lors de la reservation.");
+      setReservationMsg(err.message || "Erreur lors de la réservation.");
     } finally {
       setReservationLoading(false);
     }
@@ -131,12 +139,20 @@ function SiteLogementDetail() {
   if (loading) {
     return (
       <PageLayout>
-        <div style={{ fontFamily: "sans-serif" }}>
-          <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000 }}>
-            <h1 onClick={() => navigate("/")} style={{ color: "#f0a500", fontSize: "30px", fontWeight: "bold", margin: 0, cursor: "pointer" }}>SearcHome</h1>
-          </nav>
-          <MDBox display="flex" justifyContent="center" py={20}>
-            <CircularProgress />
+        <div style={{ minHeight: "100vh", background: "#f6f7fb" }}>
+          <PublicHeader active="annonces" />
+          <MDBox
+            minHeight="100vh"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <MDBox textAlign="center">
+              <CircularProgress sx={{ color: "#f2a900" }} />
+              <MDTypography variant="body2" color="text" mt={2}>
+                Chargement du logement…
+              </MDTypography>
+            </MDBox>
           </MDBox>
         </div>
       </PageLayout>
@@ -146,16 +162,26 @@ function SiteLogementDetail() {
   if (erreur || !logement) {
     return (
       <PageLayout>
-        <div style={{ fontFamily: "sans-serif" }}>
-          <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000 }}>
-            <h1 onClick={() => navigate("/")} style={{ color: "#f0a500", fontSize: "30px", fontWeight: "bold", margin: 0, cursor: "pointer" }}>SearcHome</h1>
-          </nav>
-          <MDBox mt={12} px={6}>
-            <MDAlert color="error">{erreur || "Logement introuvable"}</MDAlert>
-            <MDButton variant="gradient" color="info" onClick={() => navigate("/annonces")} sx={{ mt: 2 }}>
-              Retour aux annonces
-            </MDButton>
+        <div style={{ minHeight: "100vh", background: "#f6f7fb" }}>
+          <PublicHeader active="annonces" />
+          <MDBox minHeight="82vh" pt={16} px={2}>
+            <Card sx={{ maxWidth: 700, mx: "auto" }}>
+              <MDBox p={3}>
+                <MDAlert color="error">
+                  {erreur || "Logement introuvable"}
+                </MDAlert>
+                <MDButton
+                  variant="gradient"
+                  color="warning"
+                  onClick={() => navigate("/annonces")}
+                  sx={{ mt: 2 }}
+                >
+                  Retour aux annonces
+                </MDButton>
+              </MDBox>
+            </Card>
           </MDBox>
+          <PublicFooter />
         </div>
       </PageLayout>
     );
@@ -163,38 +189,81 @@ function SiteLogementDetail() {
 
   const medias = logement.medias || [];
   const equipements = logement.equipements
-    ? logement.equipements.split(",").map((s) => s.trim()).filter(Boolean)
+    ? logement.equipements
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
     : [];
 
   return (
     <PageLayout>
-      <div style={{ fontFamily: "sans-serif", margin: 0, padding: 0 }}>
-        <nav style={{ backgroundColor: "#1a1a2e", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "fixed", width: "100%", top: 0, zIndex: 1000 }}>
-          <h1 onClick={() => navigate("/")} style={{ color: "#f0a500", fontSize: "30px", fontWeight: "bold", margin: 0, cursor: "pointer" }}>SearcHome</h1>
-          <div>
-            <a href="/" style={{ color: "white", marginRight: 20, textDecoration: "none" }}>Accueil</a>
-            <a href="/annonces" style={{ color: "#f0a500", marginRight: 20, textDecoration: "none" }}>Annonces</a>
-          </div>
-        </nav>
+      <div style={{ minHeight: "100vh", background: "#f6f7fb" }}>
+        <PublicHeader active="annonces" />
 
-        <div style={{ paddingTop: 100, minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
-          <MDBox px={6} py={4}>
+        <main style={{ paddingTop: 76, minHeight: "100vh" }}>
+          <MDBox
+            py={{ xs: 3, md: 5 }}
+            px={{ xs: 2, md: 4 }}
+            maxWidth="1180px"
+            mx="auto"
+          >
             <MDBox display="flex" alignItems="center" mb={3} gap={1}>
-              <Icon sx={{ cursor: "pointer", fontSize: 24, color: "text.main" }} onClick={() => navigate("/annonces")}>arrow_back</Icon>
-              <MDTypography variant="h4" fontWeight="bold">
-                {logement.titre}
-              </MDTypography>
+              <MDButton
+                variant="text"
+                color="dark"
+                size="small"
+                onClick={() => navigate("/annonces")}
+                sx={{ px: 0 }}
+              >
+                <Icon sx={{ mr: 0.5, fontSize: 20 }}>arrow_back</Icon>
+                Retour aux annonces
+              </MDButton>
             </MDBox>
 
-            <MDBox display="flex" gap={1} mb={3}>
-              <Chip label={logement.statutLogement || "DISPONIBLE"} color={STATUT_COLORS[logement.statutLogement] || "default"} size="small" />
-              <Chip label={logement.typeLogement} size="small" variant="outlined" />
-              <Chip label={logement.typeTransaction} size="small" variant="outlined" />
+            <MDBox
+              mb={3}
+              display="flex"
+              alignItems={{ xs: "flex-start", md: "center" }}
+              justifyContent="space-between"
+              flexDirection={{ xs: "column", md: "row" }}
+              gap={2}
+            >
+              <MDBox>
+                <MDTypography variant="h4" fontWeight="bold">
+                  {logement.titre}
+                </MDTypography>
+                <MDBox display="flex" alignItems="center" gap={0.5} mt={1}>
+                  <Icon sx={{ color: "#d89000", fontSize: 18 }}>
+                    location_on
+                  </Icon>
+                  <MDTypography variant="body2" color="text">
+                    {logement.ville}
+                    {logement.quartier ? ` · ${logement.quartier}` : ""}
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
+              <MDBox display="flex" flexWrap="wrap" gap={1}>
+                <Chip
+                  label={logement.statutLogement || "DISPONIBLE"}
+                  color={STATUT_COLORS[logement.statutLogement] || "default"}
+                  size="small"
+                />
+                <Chip
+                  label={logement.typeLogement}
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  label={logement.typeTransaction}
+                  size="small"
+                  variant="outlined"
+                />
+              </MDBox>
             </MDBox>
 
             <Grid container spacing={3}>
               <Grid item xs={12} md={7}>
-                <Card>
+                <Card sx={{ overflow: "hidden", borderRadius: 2.5 }}>
                   <MDBox p={2}>
                     {medias.length > 0 ? (
                       <MDBox>
@@ -202,33 +271,63 @@ function SiteLogementDetail() {
                           <img
                             src={getFileUrl(medias[activePhotoIndex]?.fileUrl)}
                             alt={logement.titre}
-                            style={{ width: "100%", height: 400, objectFit: "cover", borderRadius: 8 }}
+                            style={{
+                              width: "100%",
+                              height: 430,
+                              objectFit: "cover",
+                              borderRadius: 8,
+                            }}
                           />
                         </MDBox>
                         {medias.length > 1 && (
-                          <MDBox display="flex" gap={0.5} overflow="auto" pb={1}>
+                          <MDBox
+                            display="flex"
+                            gap={0.5}
+                            overflow="auto"
+                            pb={1}
+                          >
                             {medias.map((media, i) => (
                               <MDBox
                                 key={media.id || i}
                                 onClick={() => setActivePhotoIndex(i)}
                                 sx={{
                                   cursor: "pointer",
-                                  border: i === activePhotoIndex ? "2px solid #f0a500" : "2px solid transparent",
+                                  border:
+                                    i === activePhotoIndex
+                                      ? "2px solid #f0a500"
+                                      : "2px solid transparent",
                                   borderRadius: 1,
                                   overflow: "hidden",
                                   flexShrink: 0,
                                 }}
                               >
-                                <img src={getFileUrl(media.fileUrl)} alt="" style={{ width: 72, height: 54, objectFit: "cover" }} />
+                                <img
+                                  src={getFileUrl(media.fileUrl)}
+                                  alt=""
+                                  style={{
+                                    width: 72,
+                                    height: 54,
+                                    objectFit: "cover",
+                                  }}
+                                />
                               </MDBox>
                             ))}
                           </MDBox>
                         )}
                       </MDBox>
                     ) : (
-                      <MDBox py={10} textAlign="center" bgColor="grey-200" borderRadius="md">
-                        <Icon sx={{ fontSize: 80, color: "text.disabled" }}>home</Icon>
-                        <MDTypography variant="body2" color="text" mt={1}>Aucune photo</MDTypography>
+                      <MDBox
+                        py={10}
+                        textAlign="center"
+                        bgColor="grey-200"
+                        borderRadius="md"
+                      >
+                        <Icon sx={{ fontSize: 80, color: "text.disabled" }}>
+                          home
+                        </Icon>
+                        <MDTypography variant="body2" color="text" mt={1}>
+                          Aucune photo
+                        </MDTypography>
                       </MDBox>
                     )}
                   </MDBox>
@@ -236,8 +335,15 @@ function SiteLogementDetail() {
 
                 <Card sx={{ mt: 3 }}>
                   <MDBox p={3}>
-                    <MDTypography variant="h6" fontWeight="medium" mb={1}>Description</MDTypography>
-                    <MDTypography variant="body2" color="text" whiteSpace="pre-wrap" lineHeight={1.8}>
+                    <MDTypography variant="h6" fontWeight="medium" mb={1}>
+                      Description
+                    </MDTypography>
+                    <MDTypography
+                      variant="body2"
+                      color="text"
+                      whiteSpace="pre-wrap"
+                      lineHeight={1.8}
+                    >
                       {logement.description}
                     </MDTypography>
                   </MDBox>
@@ -246,10 +352,18 @@ function SiteLogementDetail() {
                 {equipements.length > 0 && (
                   <Card sx={{ mt: 3 }}>
                     <MDBox p={3}>
-                      <MDTypography variant="h6" fontWeight="medium" mb={2}>Equipements</MDTypography>
+                      <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                        Equipements
+                      </MDTypography>
                       <MDBox display="flex" flexWrap="wrap" gap={1}>
                         {equipements.map((eq) => (
-                          <Chip key={eq} label={eq} color="info" variant="outlined" size="small" />
+                          <Chip
+                            key={eq}
+                            label={eq}
+                            color="info"
+                            variant="outlined"
+                            size="small"
+                          />
                         ))}
                       </MDBox>
                     </MDBox>
@@ -258,47 +372,97 @@ function SiteLogementDetail() {
 
                 <Card sx={{ mt: 3 }}>
                   <MDBox p={3}>
-                    <MDTypography variant="h6" fontWeight="medium" mb={2}>Localisation</MDTypography>
+                    <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                      Localisation
+                    </MDTypography>
                     <MDBox display="flex" alignItems="center" gap={1} mb={1}>
-                      <Icon sx={{ fontSize: 20, color: "info.main" }}>location_on</Icon>
-                      <MDTypography variant="body2">{logement.adresse}</MDTypography>
+                      <Icon sx={{ fontSize: 20, color: "info.main" }}>
+                        location_on
+                      </Icon>
+                      <MDTypography variant="body2">
+                        {logement.adresse}
+                      </MDTypography>
                     </MDBox>
                     <MDTypography variant="body2" color="text">
-                      {logement.ville}{logement.quartier ? `, ${logement.quartier}` : ""}
+                      {logement.ville}
+                      {logement.quartier ? `, ${logement.quartier}` : ""}
                     </MDTypography>
                   </MDBox>
                 </Card>
               </Grid>
 
               <Grid item xs={12} md={5}>
-                <Card sx={{ position: "sticky", top: 100 }}>
+                <Card
+                  sx={{
+                    position: { md: "sticky" },
+                    top: 100,
+                    borderRadius: 2.5,
+                  }}
+                >
                   <MDBox p={3}>
-                    <MDTypography variant="h3" fontWeight="bold" color="info" mb={0.5}>
+                    <MDTypography
+                      variant="h3"
+                      fontWeight="bold"
+                      color="dark"
+                      mb={0.5}
+                    >
                       {Number(logement.prix).toLocaleString("fr-FR")} FCFA
                     </MDTypography>
                     {logement.typeTransaction === "LOCATION" && (
-                      <MDTypography variant="body2" color="text" mb={2}>/mois</MDTypography>
+                      <MDTypography variant="body2" color="text" mb={2}>
+                        /mois
+                      </MDTypography>
                     )}
 
                     <MDBox display="flex" flexWrap="wrap" gap={1} mb={3}>
                       {logement.nbPieces && (
-                        <Chip icon={<Icon sx={{ fontSize: 16 }}>meeting_room</Icon>} label={`${logement.nbPieces} pièces`} size="small" variant="outlined" />
+                        <Chip
+                          icon={<Icon sx={{ fontSize: 16 }}>meeting_room</Icon>}
+                          label={`${logement.nbPieces} pièces`}
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                       {logement.superficie && (
-                        <Chip icon={<Icon sx={{ fontSize: 16 }}>square_foot</Icon>} label={`${logement.superficie} m²`} size="small" variant="outlined" />
+                        <Chip
+                          icon={<Icon sx={{ fontSize: 16 }}>square_foot</Icon>}
+                          label={`${logement.superficie} m²`}
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                       {logement.charges > 0 && (
-                        <Chip label={`${Number(logement.charges).toLocaleString("fr-FR")} FCFA charges`} size="small" variant="outlined" />
+                        <Chip
+                          label={`${Number(logement.charges).toLocaleString(
+                            "fr-FR"
+                          )} FCFA charges`}
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                     </MDBox>
 
                     {logement.typeTransaction === "LOCATION" && (
-                      <MDBox component="form" onSubmit={handleReservation} ref={formRef}>
-                        <MDTypography variant="h6" fontWeight="medium" mb={2}>Réserver ce logement</MDTypography>
+                      <MDBox
+                        component="form"
+                        onSubmit={handleReservation}
+                        ref={formRef}
+                      >
+                        <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                          Réserver ce logement
+                        </MDTypography>
 
                         {reservationMsg && (
                           <MDBox mb={2}>
-                            <MDAlert color={reservationStatut === "success" ? "success" : "error"} dismissible onClose={() => setReservationMsg(null)}>
+                            <MDAlert
+                              color={
+                                reservationStatut === "success"
+                                  ? "success"
+                                  : "error"
+                              }
+                              dismissible
+                              onClose={() => setReservationMsg(null)}
+                            >
                               {reservationMsg}
                             </MDAlert>
                           </MDBox>
@@ -312,7 +476,9 @@ function SiteLogementDetail() {
                           value={dateDebut}
                           onChange={(e) => setDateDebut(e.target.value)}
                           InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: new Date().toISOString().split("T")[0] }}
+                          inputProps={{
+                            min: new Date().toISOString().split("T")[0],
+                          }}
                           sx={{ mb: 2 }}
                         />
                         <TextField
@@ -323,22 +489,55 @@ function SiteLogementDetail() {
                           value={dateFin}
                           onChange={(e) => setDateFin(e.target.value)}
                           InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: dateDebut || new Date().toISOString().split("T")[0] }}
+                          inputProps={{
+                            min:
+                              dateDebut ||
+                              new Date().toISOString().split("T")[0],
+                          }}
                           sx={{ mb: 3 }}
                         />
 
-                        {dateDebut && dateFin && new Date(dateFin) > new Date(dateDebut) && (
-                          <MDBox mb={2} p={2} bgColor="grey-100" borderRadius="md">
-                            <MDTypography variant="body2" color="text" mb={0.5}>Durée du séjour</MDTypography>
-                            <MDTypography variant="h6" fontWeight="medium">
-                              {Math.ceil((new Date(dateFin) - new Date(dateDebut)) / (1000 * 60 * 60 * 24))} jours
-                            </MDTypography>
-                            <MDTypography variant="body2" color="text" mt={1}>Coût estimé</MDTypography>
-                            <MDTypography variant="h6" fontWeight="bold" color="info">
-                              {Math.ceil((new Date(dateFin) - new Date(dateDebut)) / (1000 * 60 * 60 * 24) * Number(logement.prix) / 30).toLocaleString("fr-FR")} FCFA
-                            </MDTypography>
-                          </MDBox>
-                        )}
+                        {dateDebut &&
+                          dateFin &&
+                          new Date(dateFin) > new Date(dateDebut) && (
+                            <MDBox
+                              mb={2}
+                              p={2}
+                              bgColor="grey-100"
+                              borderRadius="md"
+                            >
+                              <MDTypography
+                                variant="body2"
+                                color="text"
+                                mb={0.5}
+                              >
+                                Durée du séjour
+                              </MDTypography>
+                              <MDTypography variant="h6" fontWeight="medium">
+                                {Math.ceil(
+                                  (new Date(dateFin) - new Date(dateDebut)) /
+                                    (1000 * 60 * 60 * 24)
+                                )}{" "}
+                                jours
+                              </MDTypography>
+                              <MDTypography variant="body2" color="text" mt={1}>
+                                Coût estimé
+                              </MDTypography>
+                              <MDTypography
+                                variant="h6"
+                                fontWeight="bold"
+                                color="dark"
+                              >
+                                {Math.ceil(
+                                  (((new Date(dateFin) - new Date(dateDebut)) /
+                                    (1000 * 60 * 60 * 24)) *
+                                    Number(logement.prix)) /
+                                    30
+                                ).toLocaleString("fr-FR")}{" "}
+                                FCFA
+                              </MDTypography>
+                            </MDBox>
+                          )}
 
                         <TextField
                           select
@@ -349,51 +548,17 @@ function SiteLogementDetail() {
                           onChange={(e) => setMethodepayment(e.target.value)}
                           sx={{ mb: 2 }}
                         >
-                          <MenuItem value="VISA">Carte Visa</MenuItem>
+                          <MenuItem value="VISA">Carte bancaire</MenuItem>
                           <MenuItem value="ORANGE_MONEY">Orange Money</MenuItem>
                           <MenuItem value="MTN_MOMO">MTN MoMo</MenuItem>
                           <MenuItem value="WAVE">Wave</MenuItem>
                         </TextField>
 
-                        {methodepayment === "VISA" ? (
-                          <>
-                            <TextField
-                              fullWidth
-                              size="small"
-                              label="Numero de carte"
-                              value={cardNumber}
-                              onChange={(e) => setCardNumber(e.target.value)}
-                              placeholder="4242 4242 4242 4242"
-                              sx={{ mb: 2 }}
-                            />
-                            <MDBox display="flex" gap={1}>
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Date d'expiration"
-                                value={expiryDate}
-                                onChange={(e) => setExpiryDate(e.target.value)}
-                                placeholder="MM/AA"
-                                sx={{ mb: 2 }}
-                              />
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="CVV"
-                                type="password"
-                                value={cvv}
-                                onChange={(e) => setCvv(e.target.value)}
-                                placeholder="123"
-                                inputProps={{ maxLength: 3 }}
-                                sx={{ mb: 2 }}
-                              />
-                            </MDBox>
-                          </>
-                        ) : (
+                        {methodepayment !== "VISA" && (
                           <TextField
                             fullWidth
                             size="small"
-                            label="Numero de telephone"
+                            label="Numéro de téléphone"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
                             placeholder="6XX XXX XXX"
@@ -403,16 +568,26 @@ function SiteLogementDetail() {
 
                         <MDButton
                           variant="gradient"
-                          color="info"
+                          color="warning"
                           type="submit"
                           fullWidth
                           disabled={reservationLoading}
                         >
-                          {reservationLoading ? <CircularProgress size={20} color="inherit" /> : "Reserver et payer"}
+                          {reservationLoading ? (
+                            <CircularProgress size={20} color="inherit" />
+                          ) : (
+                            "Réserver et payer"
+                          )}
                         </MDButton>
 
                         {!isAuthenticated() && (
-                          <MDTypography variant="caption" color="text" textAlign="center" display="block" mt={2}>
+                          <MDTypography
+                            variant="caption"
+                            color="text"
+                            textAlign="center"
+                            display="block"
+                            mt={2}
+                          >
                             Connectez-vous pour réserver
                           </MDTypography>
                         )}
@@ -423,12 +598,9 @@ function SiteLogementDetail() {
               </Grid>
             </Grid>
           </MDBox>
-        </div>
+        </main>
 
-        <footer style={{ backgroundColor: "#1a1a2e", color: "white", padding: "50px", textAlign: "center" }}>
-          <h2 style={{ color: "#f0a500", marginBottom: 20 }}>SearcHome</h2>
-          <p style={{ color: "#666", fontSize: 14 }}>© 2026 SearcHome - Tous droits réservés</p>
-        </footer>
+        <PublicFooter />
       </div>
     </PageLayout>
   );
