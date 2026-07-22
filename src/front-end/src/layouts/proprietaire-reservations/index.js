@@ -39,6 +39,7 @@ function ProprietaireReservations() {
 
   useEffect(() => {
     loadReservations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadReservations = async () => {

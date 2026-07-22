@@ -42,6 +42,7 @@ function Notifications() {
   useEffect(() => {
     if (isAdmin) loadSubscribers();
     else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSubscribers = async () => {

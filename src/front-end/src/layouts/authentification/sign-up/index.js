@@ -27,7 +27,7 @@ function SignUp() {
     setLoading(true);
 
     try {
-      const data = await register({ nom, email, password, role: "CLIENT" });
+      const data = await register({ nom, email, password });
       saveAuthSession(data);
       if (isReservationFlow) {
         navigate(`/annonces/${reserverLogementId}?reserver=1`, { replace: true });
@@ -88,13 +88,13 @@ function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </MDBox>
-            {isReservationFlow && (
-              <MDBox mb={2} p={2} bgColor="grey-100" borderRadius="md">
-                <MDTypography variant="caption" color="text">
-                  Vous creez un compte client pour pouvoir reserver ce logement.
-                </MDTypography>
-              </MDBox>
-            )}
+            <MDBox mb={2} p={2} bgColor="grey-100" borderRadius="md">
+              <MDTypography variant="caption" color="text">
+                {isReservationFlow
+                  ? "Vous creez un compte client pour pouvoir reserver ce logement."
+                  : "Vous creerez un compte client. Seul un administrateur peut attribuer un autre type de compte."}
+              </MDTypography>
+            </MDBox>
             {error && (
               <MDTypography variant="caption" color="error">
                 {error}

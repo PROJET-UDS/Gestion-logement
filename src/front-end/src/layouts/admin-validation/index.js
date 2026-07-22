@@ -45,6 +45,7 @@ function AdminValidation() {
 
   useEffect(() => {
     fetchLogements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleValider = async (id) => {

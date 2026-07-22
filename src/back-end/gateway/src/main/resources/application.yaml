@@ -10,7 +10,8 @@ spring:
         cors-configurations:
           '[/**]':
             allowedOriginPatterns:
-              - "*"
+              - "http://localhost:3000"
+              - "http://localhost:3001"
             allowedMethods:
               - GET
               - POST
@@ -37,7 +38,7 @@ spring:
         - id: logement
           uri: lb://logement
           predicates:
-            - Path=/logements/**,/api/v1/logements/**,/api/v1/newsletter/**
+            - Path=/logements/**,/api/v1/logements/**,/api/v1/newsletter/**,/api/v1/abonnements/**
 
         - id: reservation
           uri: lb://reservation
@@ -47,7 +48,7 @@ spring:
         - id: payment
           uri: lb://payment
           predicates:
-            - Path=/payments/**,/api/payments/**,/abonnements/**,/reversements/**,/webhooks/**
+            - Path=/payments/**,/api/payments/**,/reversements/**,/webhooks/**
 
         - id: messagerie
           uri: lb://messagerie

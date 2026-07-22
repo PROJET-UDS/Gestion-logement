@@ -80,6 +80,9 @@ public class LogementMapper {
         dto.setLatitude(entity.getLatitude());
         dto.setLongitude(entity.getLongitude());
         dto.setNoteMoyenne(entity.getNoteMoyenne());
+        dto.setEnVedette(Boolean.TRUE.equals(entity.getEnVedette()));
+        dto.setDateVedetteDebut(entity.getDateVedetteDebut());
+        dto.setDateVedetteFin(entity.getDateVedetteFin());
 
         if (entity.getMedias() != null) {
             dto.setMedias(entity.getMedias().stream()

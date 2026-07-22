@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -33,6 +34,9 @@ public class UserProfile {
     private String nomComplet;
 
     private String telephone;
+
+    @Lob
+    private String photoUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

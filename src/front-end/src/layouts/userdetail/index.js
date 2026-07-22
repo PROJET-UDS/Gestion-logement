@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
+import MenuItem from "@mui/material/MenuItem";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
@@ -10,7 +11,14 @@ import MDAvatar from "components/MDAvatar";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
+import { API_BASE_URL, authHeaders } from "services/authService";
 import burceMars from "assets/images/bruce-mars.jpg";
+
+const ROLE_OPTIONS = [
+  { value: "CLIENT", label: "Client" },
+  { value: "PROPRIETAIRE", label: "Proprietaire" },
+  { value: "ADMIN", label: "Administrateur" },
+];
 
 function UserDetail() {
   const { id } = useParams();
@@ -20,74 +28,92 @@ function UserDetail() {
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [role, setRole] = useState("");
+  const [actif, setActif] = useState(true);
   const [photo, setPhoto] = useState(burceMars);
-  const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:8089/users/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+          headers: { ...authHeaders() },
         });
         if (response.ok) {
           const data = await response.json();
-          setNom(data.nom || "");
+          setNom(data.nomComplet || "");
           setEmail(data.email || "");
           setTelephone(data.telephone || "");
-          setRole(data.role || "Utilisateur");
+          setRole(data.role || "CLIENT");
+          setActif(data.actif !== false);
           if (data.photoUrl) setPhoto(data.photoUrl);
         } else {
           setMessage("Utilisateur introuvable");
         }
       } catch (err) {
         setMessage("Erreur de connexion au serveur");
+      } finally {
+        setLoading(false);
       }
     };
     fetchUser();
   }, [id]);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleRoleChange = async (newRole) => {
+    if (newRole === role) return;
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8089/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${id}/role`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...authHeaders(),
         },
-        body: JSON.stringify({ nom, email, telephone, role }),
+        body: JSON.stringify({ role: newRole }),
       });
       if (response.ok) {
-        setMessage("Utilisateur mis à jour avec succès !");
-        setIsEditing(false);
+        setRole(newRole);
+        setMessage("Role modifie avec succes !");
       } else {
-        setMessage("Erreur lors de la mise à jour");
+        const err = await response.json();
+        setMessage(err.message || "Erreur lors du changement de role");
       }
     } catch (err) {
       setMessage("Erreur de connexion au serveur");
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) return;
+  const handleBanToggle = async () => {
+    const action = actif ? "bannir" : "debannir";
+    if (!window.confirm(`Voulez-vous vraiment ${action} cet utilisateur ?`)) return;
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8089/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API_BASE_URL}/users/${id}/ban`, {
+        method: "PATCH",
+        headers: { ...authHeaders() },
       });
       if (response.ok) {
-        navigate("/tables");
+        const data = await response.json();
+        setActif(data.actif);
+        setMessage(data.actif ? "Utilisateur debanni !" : "Utilisateur banni !");
       } else {
-        setMessage("Erreur lors de la suppression");
+        const err = await response.json();
+        setMessage(err.message || "Erreur lors de l'action");
       }
     } catch (err) {
       setMessage("Erreur de connexion au serveur");
     }
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox p={3}>
+          <MDTypography variant="button" color="text">Chargement...</MDTypography>
+        </MDBox>
+        <Footer />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -107,91 +133,86 @@ function UserDetail() {
                     <MDTypography variant="button" color="text">
                       {email}
                     </MDTypography>
+                    <MDBox>
+                      <MDTypography
+                        variant="caption"
+                        color={actif ? "success" : "error"}
+                        fontWeight="medium"
+                      >
+                        {actif ? "Actif" : "Banni"}
+                      </MDTypography>
+                    </MDBox>
                   </MDBox>
                 </MDBox>
 
-                <MDBox component="form" role="form" onSubmit={handleSave}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <MDInput
-                        type="text"
-                        label="Nom complet"
-                        fullWidth
-                        value={nom}
-                        onChange={(e) => setNom(e.target.value)}
-                        disabled={!isEditing}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <MDInput
-                        type="email"
-                        label="Email"
-                        fullWidth
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={!isEditing}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <MDInput
-                        type="text"
-                        label="Téléphone"
-                        fullWidth
-                        value={telephone}
-                        onChange={(e) => setTelephone(e.target.value)}
-                        disabled={!isEditing}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <MDInput
-                        type="text"
-                        label="Rôle"
-                        fullWidth
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        disabled={!isEditing}
-                      />
-                    </Grid>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <MDInput
+                      type="text"
+                      label="Nom complet"
+                      fullWidth
+                      value={nom}
+                      disabled
+                    />
                   </Grid>
-
-                  {message && (
-                    <MDTypography variant="caption" color="info" mt={2} display="block">
-                      {message}
-                    </MDTypography>
-                  )}
-
-                  <MDBox mt={3} display="flex" gap={2}>
-                    {!isEditing ? (
-                      <MDButton
-                        variant="gradient"
-                        color="info"
-                        onClick={() => setIsEditing(true)}
-                        type="button"
-                      >
-                        Modifier
-                      </MDButton>
-                    ) : (
-                      <MDButton variant="gradient" color="success" type="submit">
-                        Enregistrer
-                      </MDButton>
-                    )}
-                    <MDButton
-                      variant="gradient"
-                      color="error"
-                      type="button"
-                      onClick={handleDelete}
+                  <Grid item xs={12} md={6}>
+                    <MDInput
+                      type="email"
+                      label="Email"
+                      fullWidth
+                      value={email}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <MDInput
+                      type="text"
+                      label="Telephone"
+                      fullWidth
+                      value={telephone}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <MDInput
+                      select
+                      label="Role"
+                      fullWidth
+                      value={role}
+                      onChange={(e) => handleRoleChange(e.target.value)}
                     >
-                      Supprimer
-                    </MDButton>
-                    <MDButton
-                      variant="outlined"
-                      color="dark"
-                      type="button"
-                      onClick={() => navigate("/tables")}
-                    >
-                      Retour
-                    </MDButton>
-                  </MDBox>
+                      {ROLE_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </MDInput>
+                  </Grid>
+                </Grid>
+
+                {message && (
+                  <MDTypography variant="caption" color={message.includes("succes") || message.includes("debanni") || message.includes("banni") ? "success" : "error"} mt={2} display="block">
+                    {message}
+                  </MDTypography>
+                )}
+
+                <MDBox mt={3} display="flex" gap={2}>
+                  <MDButton
+                    variant="gradient"
+                    color={actif ? "error" : "success"}
+                    type="button"
+                    onClick={handleBanToggle}
+                  >
+                    {actif ? "Bannir" : "Debannir"}
+                  </MDButton>
+                  <MDButton
+                    variant="outlined"
+                    color="dark"
+                    type="button"
+                    onClick={() => navigate("/tables")}
+                  >
+                    Retour
+                  </MDButton>
                 </MDBox>
               </MDBox>
             </Card>

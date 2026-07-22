@@ -58,6 +58,9 @@ management:
 jwt:
   secret: ${JWT_SECRET:cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
+
 springdoc:
   api-docs:
     enabled: true

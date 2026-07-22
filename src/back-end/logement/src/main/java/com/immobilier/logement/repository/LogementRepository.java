@@ -46,4 +46,12 @@ public interface LogementRepository extends JpaRepository<Logement, Long>, JpaSp
             @Param("ville") String ville,
             @Param("typeLogement") String typeLogement
     );
+
+    @Query("SELECT COUNT(l) FROM Logement l WHERE l.proprietaireId = :proprietaireId AND (l.supprime = false OR l.supprime IS NULL)")
+    long countByProprietaireIdAndSupprimeFalseOrSupprimeIsNull(@Param("proprietaireId") String proprietaireId);
+
+    @Query("SELECT l FROM Logement l WHERE l.enVedette = true AND l.supprime = false " +
+            "AND l.statutAnnonce IN (com.immobilier.logement.enums.StatutAnnonce.PUBLIEE, com.immobilier.logement.enums.StatutAnnonce.VALIDE, com.immobilier.logement.enums.StatutAnnonce.VALIDEE) " +
+            "ORDER BY l.dateVedetteFin DESC")
+    List<Logement> findByEnVedetteTrue();
 }

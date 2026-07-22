@@ -35,4 +35,7 @@ public class LogementResponseDTO {
     private Double latitude;
     private Double longitude;
     private Double noteMoyenne = 0.0;
+    private Boolean enVedette = false;
+    private LocalDateTime dateVedetteDebut;
+    private LocalDateTime dateVedetteFin;
 }

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class LogementController {
     private final LogementService logementService;
 
     @PostMapping
+    @PreAuthorize("hasRole('PROPRIETAIRE') or hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> publierLogement(
             @Valid @RequestBody LogementRequestDTO requestDTO,
             @AuthenticationPrincipal AuthenticatedUser user) {
@@ -48,12 +50,14 @@ public class LogementController {
     }
 
     @GetMapping("/mes-logements")
+    @PreAuthorize("hasRole('PROPRIETAIRE') or hasRole('ADMIN')")
     public ResponseEntity<List<LogementResponseDTO>> mesLogements(
             @AuthenticationPrincipal AuthenticatedUser user) {
         return ResponseEntity.ok(logementService.obtenirLogementsParProprietaire(user.userId()));
     }
 
     @PatchMapping("/{id}/statut")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> modererAnnonce(
             @PathVariable Long id,
             @RequestParam StatutAnnonce statut) {
@@ -86,6 +90,7 @@ public class LogementController {
     }
 
     @PatchMapping("/{id}/soumettre")
+    @PreAuthorize("hasRole('PROPRIETAIRE') or hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> soumettreAValidation(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
@@ -93,6 +98,7 @@ public class LogementController {
     }
 
     @PatchMapping("/{id}/valider")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> validerLogement(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
@@ -100,6 +106,7 @@ public class LogementController {
     }
 
     @PatchMapping("/{id}/rejeter")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> rejeterLogement(
             @PathVariable Long id,
             @RequestParam String motif,
@@ -108,6 +115,7 @@ public class LogementController {
     }
 
     @PatchMapping("/{id}/archiver")
+    @PreAuthorize("hasRole('PROPRIETAIRE') or hasRole('ADMIN')")
     public ResponseEntity<LogementResponseDTO> archiverLogement(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
@@ -115,6 +123,7 @@ public class LogementController {
     }
 
     @GetMapping("/en-attente-validation")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<LogementResponseDTO>> logementsEnAttenteValidation() {
         return ResponseEntity.ok(logementService.obtenirLogementsEnAttenteValidation());
     }

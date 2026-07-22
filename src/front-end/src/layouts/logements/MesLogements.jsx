@@ -16,6 +16,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
 import { getMesLogements, getFileUrl } from "api/logementApi";
+import { getMonAbonnement } from "api/abonnementApi";
 import { useNavigate } from "react-router-dom";
 
 const STATUT_COLORS = {
@@ -28,12 +29,19 @@ const STATUT_COLORS = {
 function MesLogements() {
   const navigate = useNavigate();
   const [logements, setLogements] = useState([]);
+  const [abonnement, setAbonnement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
 
   useEffect(() => {
-    getMesLogements()
-      .then(setLogements)
+    Promise.all([
+      getMesLogements(),
+      getMonAbonnement().catch(() => null),
+    ])
+      .then(([logs, ab]) => {
+        setLogements(logs);
+        setAbonnement(ab);
+      })
       .catch((err) => setErreur(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -48,11 +56,31 @@ function MesLogements() {
               <MDTypography variant="h5" fontWeight="medium">
                 Mes logements
               </MDTypography>
-              <MDButton variant="gradient" color="info" onClick={() => navigate("/ajouter-logement")}>
-                <Icon sx={{ mr: 0.5 }}>add</Icon>
-                Ajouter
-              </MDButton>
+              <MDBox display="flex" gap={1}>
+                <MDButton variant="outlined" color="warning" size="small" onClick={() => navigate("/abonnement")}>
+                  <Icon sx={{ mr: 0.5 }}>card_membership</Icon>
+                  Abonnement
+                </MDButton>
+                <MDButton variant="gradient" color="info" onClick={() => navigate("/ajouter-logement")}>
+                  <Icon sx={{ mr: 0.5 }}>add</Icon>
+                  Ajouter
+                </MDButton>
+              </MDBox>
             </MDBox>
+
+            {abonnement && abonnement.typeAbonnement !== "GRATUIT" && (
+              <Card sx={{ p: 2, mb: 2, bgcolor: "grey.100" }}>
+                <MDBox display="flex" justifyContent="space-between" alignItems="center">
+                  <MDTypography variant="body2" color="text">
+                    <Icon fontSize="small" color="info">card_membership</Icon>&nbsp;
+                    Plan: <strong>{abonnement.typeAbonnement?.replace(/_/g, " ")}</strong>
+                    {abonnement.publicationsIncluses !== -1
+                      ? ` — ${abonnement.publicationsRestantes} publications restantes`
+                      : " — Publications illimitees"}
+                  </MDTypography>
+                </MDBox>
+              </Card>
+            )}
 
             {erreur && (
               <MDBox mb={2}>
@@ -83,10 +111,22 @@ function MesLogements() {
                 {logements.map((logement) => (
                   <Grid item xs={12} sm={6} key={logement.id}>
                     <Card
-                      sx={{ cursor: "pointer", "&:hover": { boxShadow: 6 } }}
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": { boxShadow: 6 },
+                        border: logement.enVedette ? "2px solid #f0a500" : "none",
+                      }}
                       onClick={() => navigate(`/logements/${logement.id}`)}
                     >
                       <MDBox p={2}>
+                        {logement.enVedette && (
+                          <Chip
+                            icon={<Icon sx={{ fontSize: 14, color: "#f0a500 !important" }}>star</Icon>}
+                            label="En vedette"
+                            size="small"
+                            sx={{ mb: 1, bgcolor: "#fff3e0", color: "#e65100" }}
+                          />
+                        )}
                         {logement.medias && logement.medias.length > 0 ? (
                           <MDBox mb={1}>
                             <img

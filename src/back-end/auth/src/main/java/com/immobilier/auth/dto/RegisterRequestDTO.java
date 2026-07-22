@@ -1,6 +1,5 @@
 package com.immobilier.auth.dto;
 
-import com.immobilier.shared.enums.UserRole;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -17,6 +16,4 @@ public class RegisterRequestDTO {
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 8, message = "Minimum 8 caracteres")
     private String password;
-
-    private UserRole role;
 }

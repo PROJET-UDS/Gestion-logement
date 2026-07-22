@@ -3,6 +3,7 @@ package com.immobilier.logement.security;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -48,8 +52,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/logements/insights-prix").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/logements/publies").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/avis/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/newsletter/status").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/subscribe").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/newsletter/unsubscribe").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -59,8 +64,10 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> origins = List.of(allowedOrigins.split(","));
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));

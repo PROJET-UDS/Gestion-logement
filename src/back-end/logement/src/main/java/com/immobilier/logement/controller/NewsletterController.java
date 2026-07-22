@@ -7,6 +7,7 @@ import com.immobilier.logement.service.NewsletterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,11 +39,13 @@ public class NewsletterController {
     }
 
     @GetMapping("/subscribers")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<NewsletterSubscription>> getAllSubscribers() {
         return ResponseEntity.ok(newsletterService.getAllActiveSubscribers());
     }
 
     @PostMapping("/send")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> sendToSubscribers(@Valid @RequestBody NewsletterSendDTO request) {
         newsletterService.sendNotificationToSubscribers(request.getSubject(), request.getContent());
         return ResponseEntity.ok(Map.of("message", "Notification envoyee aux abonnes"));

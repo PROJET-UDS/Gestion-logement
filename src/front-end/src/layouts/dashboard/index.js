@@ -19,6 +19,7 @@ import Footer from "examples/Footer";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import { getUserRole, authHeaders } from "services/authService";
 import { getMesReservations } from "api/reservationApi";
+import { getMonAbonnement } from "api/abonnementApi";
 
 const API_BASE_URL =
   (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
@@ -33,13 +34,25 @@ function Dashboard() {
     mesLogements: 0,
   });
   const [reservations, setReservations] = useState([]);
+  const [abonnement, setAbonnement] = useState(null);
 
   const role = getUserRole();
 
   useEffect(() => {
     loadStats();
     if (role === "CLIENT") loadReservations();
+    if (role === "PROPRIETAIRE") loadAbonnement();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadAbonnement = async () => {
+    try {
+      const ab = await getMonAbonnement();
+      setAbonnement(ab);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const loadStats = async () => {
     try {
@@ -189,6 +202,30 @@ function Dashboard() {
             </MDBox>
           </Grid>
         </Grid>
+
+        {role === "PROPRIETAIRE" && abonnement && (
+          <Card sx={{ p: 2, mt: 3, mb: 2, cursor: "pointer", "&:hover": { boxShadow: 4 } }} onClick={() => navigate("/abonnement")}>
+            <MDBox display="flex" justifyContent="space-between" alignItems="center">
+              <MDBox display="flex" alignItems="center" gap={2}>
+                <Icon fontSize="large" color="warning">card_membership</Icon>
+                <MDBox>
+                  <MDTypography variant="h6" fontWeight="bold">
+                    Abonnement: {abonnement.typeAbonnement?.replace(/_/g, " ") || "Gratuit"}
+                  </MDTypography>
+                  <MDTypography variant="body2" color="text">
+                    {abonnement.publicationsIncluses === -1
+                      ? "Publications illimitees"
+                      : `${abonnement.publicationsRestantes || 0} publications restantes sur ${abonnement.publicationsIncluses}`}
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
+              <MDButton variant="gradient" color="warning" size="small">
+                <Icon sx={{ mr: 0.5, fontSize: 16 }}>star</Icon>
+                Passer en vedette
+              </MDButton>
+            </MDBox>
+          </Card>
+        )}
 
         {role === "CLIENT" && reservations.length > 0 && (
           <Card sx={{ mt: 3 }}>

@@ -64,6 +64,7 @@ function SiteAnnonces() {
 
   useEffect(() => {
     chargerLogements(filtres);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFiltreChange = (e) => {
@@ -148,9 +149,38 @@ function SiteAnnonces() {
                 {logements.map((logement) => (
                   <Grid item xs={12} sm={6} md={4} key={logement.id}>
                     <Card
-                      sx={{ cursor: "pointer", "&:hover": { boxShadow: 6, transform: "translateY(-2px)" }, transition: "all 0.2s" }}
+                      sx={{
+                        position: "relative",
+                        cursor: "pointer",
+                        "&:hover": { boxShadow: 6, transform: "translateY(-2px)" },
+                        transition: "all 0.2s",
+                        border: logement.enVedette ? "2px solid #f0a500" : "none",
+                      }}
                       onClick={() => navigate(`/annonces/${logement.id}`)}
                     >
+                      {logement.enVedette && (
+                        <MDBox
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            left: 8,
+                            zIndex: 1,
+                            bgcolor: "#f0a500",
+                            color: "white",
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Icon sx={{ fontSize: 14 }}>star</Icon>
+                          <MDTypography variant="caption" color="white" fontWeight="bold">
+                            En vedette
+                          </MDTypography>
+                        </MDBox>
+                      )}
                       {logement.medias && logement.medias.length > 0 ? (
                         <img
                           src={getFileUrl(logement.medias[0].fileUrl)}

@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface UserProfileMapper {
 
     @Mapping(target = "role", expression = "java(userProfile.getRole().name())")
+    @Mapping(target = "photoUrl", source = "photoUrl")
     UserProfileResponseDTO toResponse(UserProfile userProfile);
 }

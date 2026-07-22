@@ -1,9 +1,11 @@
 package com.immobilier.user;
 
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(properties = {
+@SpringBootTest(classes = UserApplication.class,
+		properties = {
 		"spring.cloud.config.enabled=false",
 		"spring.config.import=optional:configserver:",
 		"spring.datasource.url=jdbc:h2:mem:user_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",

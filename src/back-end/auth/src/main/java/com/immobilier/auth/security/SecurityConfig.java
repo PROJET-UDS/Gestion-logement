@@ -37,9 +37,10 @@ public class SecurityConfig {
                     "/auth/forgot-password",
                     "/auth/forgot-password/resend",
                     "/auth/reset-password",
-                    "/auth/logout",
-                    "/auth/change-password"
+                    "/auth/logout"
                 ).permitAll()
+                .requestMatchers("/auth/admin/**").permitAll()
+                .requestMatchers("/auth/change-password").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

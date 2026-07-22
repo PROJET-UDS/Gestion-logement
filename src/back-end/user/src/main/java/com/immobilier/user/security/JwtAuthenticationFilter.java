@@ -3,6 +3,7 @@ package com.immobilier.user.security;
 import com.immobilier.shared.dto.JwtClaims;
 import com.immobilier.shared.dto.TokenValidationRequest;
 import com.immobilier.user.client.AuthServiceClient;
+import com.immobilier.user.repository.UserProfileRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AuthServiceClient authServiceClient;
+    private final UserProfileRepository userProfileRepository;
 
     @Override
     protected void doFilterInternal(
@@ -45,6 +47,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authorization.substring(BEARER_PREFIX.length());
         try {
             JwtClaims claims = authServiceClient.validate(new TokenValidationRequest(token));
+
+            if (claims.getUserId() != null) {
+                var profile = userProfileRepository.findById(claims.getUserId()).orElse(null);
+                if (profile != null && !profile.isActif()) {
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write("{\"code\":\"ACCOUNT_BANNED\",\"message\":\"Compte suspendu\"}");
+                    return;
+                }
+            }
+
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         claims,

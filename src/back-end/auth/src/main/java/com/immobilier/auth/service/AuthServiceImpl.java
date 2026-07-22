@@ -36,17 +36,48 @@ public class AuthServiceImpl implements AuthService {
         if (authUserRepository.existsByEmail(request.getEmail()))
             throw new UserAlreadyExistsException(request.getEmail());
 
-        UserRole role = resolveRegisterRole(request.getRole());
-
         AuthUser user = AuthUser.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(role)
+                .role(UserRole.CLIENT)
                 .actif(true)
                 .build();
 
         authUserRepository.save(user);
         log.info("Nouvel utilisateur enregistre : {}", user.getEmail());
+
+        UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .nom(request.getNom())
+                .role(user.getRole().name())
+                .occurredAt(Instant.now())
+                .build();
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.AUTH_EXCHANGE,
+                RabbitMQConfig.USER_REGISTERED_KEY,
+                event
+        );
+
+        return buildTokenResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public TokenResponseDTO registerByAdmin(AdminRegisterRequestDTO request) {
+        if (authUserRepository.existsByEmail(request.getEmail()))
+            throw new UserAlreadyExistsException(request.getEmail());
+
+        AuthUser user = AuthUser.builder()
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole())
+                .actif(true)
+                .build();
+
+        authUserRepository.save(user);
+        log.info("Utilisateur cree par admin : {} avec role {}", user.getEmail(), request.getRole());
 
         UserRegisteredEvent event = UserRegisteredEvent.builder()
                 .userId(user.getId())
@@ -153,12 +184,35 @@ public class AuthServiceImpl implements AuthService {
         log.info("Mot de passe change pour l'utilisateur : {}", user.getEmail());
     }
 
-    private UserRole resolveRegisterRole(UserRole requestedRole) {
-        if (requestedRole == null)
-            return UserRole.CLIENT;
-        if (requestedRole == UserRole.CLIENT || requestedRole == UserRole.PROPRIETAIRE)
-            return requestedRole;
-        throw new AuthException("Role non autorise pour l'inscription");
+    @Override
+    @Transactional
+    public void changeUserRole(String userId, UserRole newRole) {
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
+
+        String ancienRole = user.getRole().name();
+        user.setRole(newRole);
+        user.setRefreshToken(null);
+        user.setRefreshTokenExpiry(null);
+        authUserRepository.save(user);
+
+        log.info("Role auth modifie pour userId={} : {} -> {}", userId, ancienRole, newRole.name());
+    }
+
+    @Override
+    @Transactional
+    public void toggleBanUser(String userId, boolean actif) {
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
+
+        user.setActif(actif);
+        if (!actif) {
+            user.setRefreshToken(null);
+            user.setRefreshTokenExpiry(null);
+        }
+        authUserRepository.save(user);
+
+        log.info("Statut auth modifie pour userId={} : actif={}", userId, actif);
     }
 
     @Transactional

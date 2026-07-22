@@ -9,7 +9,6 @@ const USER_ID_KEY = "userId";
 const LEGACY_TOKEN_KEY = "token";
 
 export const AUTHENTICATED_ROLES = ["CLIENT", "PROPRIETAIRE", "ADMIN"];
-export const REGISTER_ROLES = ["CLIENT", "PROPRIETAIRE"];
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);

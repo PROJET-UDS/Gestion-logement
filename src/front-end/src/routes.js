@@ -16,6 +16,8 @@ import AdminValidation from "layouts/admin-validation";
 import CardPayment from "layouts/card-payment";
 import ProprietaireReservations from "layouts/proprietaire-reservations";
 import { AUTHENTICATED_ROLES } from "services/authService";
+import Abonnement from "layouts/abonnement";
+import PasserEnVedette from "layouts/abonnement/PasserEnVedette";
 
 import Icon from "@mui/material/Icon";
 
@@ -36,7 +38,16 @@ const routes = [
     icon: <Icon fontSize="small">home</Icon>,
     route: "/mes-logements",
     component: <MesLogements />,
-    roles: ["PROPRIETAIRE"],
+    roles: ["PROPRIETAIRE", "ADMIN"],
+  },
+  {
+    type: "collapse",
+    name: "Abonnement",
+    key: "abonnement",
+    icon: <Icon fontSize="small">card_membership</Icon>,
+    route: "/abonnement",
+    component: <Abonnement />,
+    roles: ["PROPRIETAIRE", "ADMIN"],
   },
   {
     type: "collapse",
@@ -63,7 +74,7 @@ const routes = [
     icon: <Icon fontSize="small">book_online</Icon>,
     route: "/mes-reservations",
     component: <MesReservations />,
-    roles: ["CLIENT"],
+    roles: ["CLIENT", "PROPRIETAIRE", "ADMIN"],
   },
   {
     type: "collapse",
@@ -72,7 +83,7 @@ const routes = [
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/proprietaire/reservations",
     component: <ProprietaireReservations />,
-    roles: ["PROPRIETAIRE"],
+    roles: ["PROPRIETAIRE", "ADMIN"],
   },
   {
     type: "collapse",
@@ -90,7 +101,7 @@ const routes = [
     icon: <Icon fontSize="small">credit_card</Icon>,
     route: "/paiement/carte",
     component: <CardPayment />,
-    roles: ["CLIENT"],
+    roles: ["CLIENT", "PROPRIETAIRE", "ADMIN"],
     hideInSidenav: true,
   },
 
@@ -146,12 +157,14 @@ const routes = [
     route: "/tables/:id",
     key: "user-detail",
     component: <UserDetail />,
+    roles: ["ADMIN"],
+    hideInSidenav: true,
   },
   {
     route: "/ajouter-logement",
     key: "ajouter-logement",
     component: <AjouterLogement />,
-    roles: ["PROPRIETAIRE"],
+    roles: ["PROPRIETAIRE", "ADMIN"],
     hideInSidenav: true,
   },
   {
@@ -173,6 +186,13 @@ const routes = [
     key: "annonce-detail",
     component: <SiteLogementDetail />,
     public: true,
+    hideInSidenav: true,
+  },
+  {
+    route: "/abonnement/vedette",
+    key: "passer-en-vedette",
+    component: <PasserEnVedette />,
+    roles: ["PROPRIETAIRE", "ADMIN"],
     hideInSidenav: true,
   },
   {

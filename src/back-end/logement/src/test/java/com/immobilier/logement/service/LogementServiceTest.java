@@ -37,9 +37,6 @@ class LogementServiceTest {
     @Mock
     private LogementMapper logementMapper;
 
-    // ====================================================================
-    // AJOUTS INDISPENSABLES : Mocks pour les deux nouveaux services
-    // ====================================================================
     @Mock
     private AlerteService alerteService;
 
@@ -48,6 +45,12 @@ class LogementServiceTest {
 
     @Mock
     private ValidationHistoryRepository validationHistoryRepository;
+
+    // ====================================================================
+    // MOCK AJOUTÉ : Nécessaire pour éviter le NullPointerException
+    // ====================================================================
+    @Mock
+    private AbonnementService abonnementService; 
 
     @InjectMocks
     private LogementServiceImpl logementService;
@@ -81,6 +84,9 @@ class LogementServiceTest {
     @Test
     void testCreerLogement_Succes() {
         // Given
+        // On indique à Mockito de renvoyer true quand on vérifie les droits de publication
+        when(abonnementService.peutPublier(anyString())).thenReturn(true); 
+
         when(logementMapper.toEntity(any(LogementRequestDTO.class))).thenReturn(logement);
         when(logementRepository.save(any(Logement.class))).thenReturn(logement);
         when(logementMapper.toResponseDTO(any(Logement.class))).thenReturn(responseDTO);
@@ -92,13 +98,10 @@ class LogementServiceTest {
         assertNotNull(resultat);
         assertEquals("Studio moderne", resultat.getTitre());
 
-        // Vérification de la persistance en BDD
+        // Vérifications
         verify(logementRepository, times(1)).save(any(Logement.class));
-
-        // VERIFICATION DE L'AJOUT : L'analyse d'alerte s'est bien exécutée une fois
         verify(alerteService, times(1)).verifierEtDeclencherAlertes(any(Logement.class));
 
-        // Vérification de l'envoi du message dans RabbitMQ
         verify(rabbitTemplate, times(1)).convertAndSend(
                 eq(RabbitMQConfig.LOGEMENT_EXCHANGE),
                 eq(RabbitMQConfig.ROUTING_KEY_LOGEMENT_CREE),

@@ -40,10 +40,18 @@ public class LogementServiceImpl implements LogementService {
     private final AlerteService alerteService;
     private final FavoriHistoriqueService favoriHistoriqueService;
     private final ValidationHistoryRepository validationHistoryRepository;
+    private final AbonnementService abonnementService;
 
     @Override
     @Transactional
     public LogementResponseDTO creerLogement(LogementRequestDTO requestDTO) {
+        if (requestDTO.getProprietaireId() != null) {
+            if (!abonnementService.peutPublier(requestDTO.getProprietaireId())) {
+                throw new IllegalStateException(
+                    "Vous avez atteint la limite de publications. Veuillez souscrire a un abonnement pour publier davantage.");
+            }
+        }
+
         Logement logement = logementMapper.toEntity(requestDTO);
         logement.setStatutAnnonce(StatutAnnonce.EN_ATTENTE_VALIDATION);
 
@@ -60,6 +68,10 @@ public class LogementServiceImpl implements LogementService {
         }
 
         Logement sauvegarde = logementRepository.save(logement);
+
+        if (requestDTO.getProprietaireId() != null) {
+            abonnementService.incrementerPublications(requestDTO.getProprietaireId());
+        }
 
         try {
             alerteService.verifierEtDeclencherAlertes(sauvegarde);
@@ -114,6 +126,13 @@ public class LogementServiceImpl implements LogementService {
                 .filter(l -> l.getStatutAnnonce() == StatutAnnonce.PUBLIEE
                         || l.getStatutAnnonce() == StatutAnnonce.VALIDE
                         || l.getStatutAnnonce() == StatutAnnonce.VALIDEE)
+                .sorted((a, b) -> {
+                    boolean aVedette = Boolean.TRUE.equals(a.getEnVedette());
+                    boolean bVedette = Boolean.TRUE.equals(b.getEnVedette());
+                    if (aVedette && !bVedette) return -1;
+                    if (!aVedette && bVedette) return 1;
+                    return 0;
+                })
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -131,6 +150,13 @@ public class LogementServiceImpl implements LogementService {
     public List<LogementResponseDTO> rechercherLogements(String ville, Double prixMax, TypeLogement typeLogement, TypeTransaction typeTransaction) {
         Specification<Logement> spec = LogementSpecification.filterLogements(ville, prixMax, typeLogement, typeTransaction);
         List<Logement> logements = logementRepository.findAll(spec);
+        logements.sort((a, b) -> {
+            boolean aVedette = Boolean.TRUE.equals(a.getEnVedette());
+            boolean bVedette = Boolean.TRUE.equals(b.getEnVedette());
+            if (aVedette && !bVedette) return -1;
+            if (!aVedette && bVedette) return 1;
+            return 0;
+        });
         return logements.stream()
                 .map(logementMapper::toResponseDTO)
                 .toList();
@@ -322,6 +348,13 @@ public class LogementServiceImpl implements LogementService {
     public List<LogementResponseDTO> obtenirLogementsPublies() {
         return logementRepository.findByStatutAnnonce(StatutAnnonce.PUBLIEE).stream()
                 .filter(l -> !Boolean.TRUE.equals(l.getSupprime()))
+                .sorted((a, b) -> {
+                    boolean aV = Boolean.TRUE.equals(a.getEnVedette());
+                    boolean bV = Boolean.TRUE.equals(b.getEnVedette());
+                    if (aV && !bV) return -1;
+                    if (!aV && bV) return 1;
+                    return 0;
+                })
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }

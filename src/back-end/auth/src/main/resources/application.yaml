@@ -61,3 +61,5 @@ jwt:
   access-expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
+internal-api-key: ${INTERNAL_API_KEY:immobilier-internal-secret-2024}
+

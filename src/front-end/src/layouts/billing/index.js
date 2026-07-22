@@ -24,6 +24,7 @@ function Billing() {
 
   useEffect(() => {
     loadPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadPayments = async () => {

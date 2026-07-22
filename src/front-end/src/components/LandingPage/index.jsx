@@ -11,7 +11,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import PageLayout from "examples/LayoutContainers/PageLayout";
 import { getLogementsPublic, getFileUrl } from "api/logementApi";
-import { isAuthenticated, getUserRole, logout, getUserId } from "services/authService";
+import { isAuthenticated, getUserRole, logout } from "services/authService";
 
 function LandingPage() {
   const navigate = useNavigate();

@@ -98,6 +98,16 @@ public class Logement {
 
     private Double noteMoyenne = 0.0;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean enVedette = false;
+
+    @Column(name = "date_vedette_debut")
+    private LocalDateTime dateVedetteDebut;
+
+    @Column(name = "date_vedette_fin")
+    private LocalDateTime dateVedetteFin;
+
     @PrePersist
     protected void onCreate() {
         this.dateCreation = LocalDateTime.now();

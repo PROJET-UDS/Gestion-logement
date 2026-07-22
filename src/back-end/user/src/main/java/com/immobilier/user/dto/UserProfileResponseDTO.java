@@ -12,6 +12,7 @@ public class UserProfileResponseDTO {
     private String email;
     private String nomComplet;
     private String telephone;
+    private String photoUrl;
     private String role;
     private boolean actif;
     private Instant createdAt;
