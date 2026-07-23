@@ -215,6 +215,14 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    public List<ReservationResponseDTO> getToutesLesReservations() {
+        return reservationRepository.findAll().stream()
+                .map(reservationMapper::toResponseDTO)
+                .map(this::enrichirAvecLogement)
+                .sorted(Comparator.comparing(ReservationResponseDTO::getDateCreation).reversed())
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void supprimerReservation(Long id) {
         if (!reservationRepository.existsById(id)) {

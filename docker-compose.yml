@@ -84,7 +84,7 @@ services:
     build: ./src/back-end/gateway
     container_name: gateway
     ports:
-      - "8080:8089"
+      - "8089:8089"
     environment:
       EUREKA_URL: http://discover:8761/eureka/
     depends_on:

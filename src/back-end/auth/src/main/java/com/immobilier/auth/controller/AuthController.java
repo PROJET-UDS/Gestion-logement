@@ -1,7 +1,6 @@
 package com.immobilier.auth.controller;
 
 import com.immobilier.auth.dto.*;
-import com.immobilier.auth.security.JwtService;
 import com.immobilier.auth.service.AuthService;
 import com.immobilier.auth.service.PasswordResetService;
 import com.immobilier.shared.dto.JwtClaims;
@@ -10,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,7 +24,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
-    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<TokenResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
@@ -94,20 +94,33 @@ public class AuthController {
 
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(
-            @RequestHeader("Authorization") String authHeader,
+            Authentication authentication,
             @Valid @RequestBody ChangePasswordRequestDTO request) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Token manquant"));
-        }
-        String token = authHeader.substring(7);
-        JwtClaims claims = jwtService.validateAndExtractAccessToken(token);
+        JwtClaims claims = claims(authentication);
         authService.changePassword(claims.getUserId(), request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Mot de passe change avec succes"));
+    }
+
+    @PatchMapping("/users/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> changeUserRole(
+            Authentication authentication,
+            @PathVariable String userId,
+            @Valid @RequestBody ChangeUserRoleRequestDTO request) {
+        JwtClaims claims = claims(authentication);
+        authService.changeUserRole(claims.getUserId(), userId, request.getRole());
+        return ResponseEntity.ok(Map.of(
+                "message", "Role utilisateur modifie avec succes",
+                "role", request.getRole().name()
+        ));
     }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Auth service is running");
+    }
+
+    private JwtClaims claims(Authentication authentication) {
+        return (JwtClaims) authentication.getPrincipal();
     }
 }

@@ -3,19 +3,19 @@ package com.immobilier.auth.service;
 import com.immobilier.auth.dto.*;
 import com.immobilier.auth.entity.AuthUser;
 import com.immobilier.auth.exception.*;
+import com.immobilier.auth.rabbitmq.AuthEventPublisher;
 import com.immobilier.auth.repository.AuthUserRepository;
 import com.immobilier.auth.security.JwtService;
 import com.immobilier.shared.enums.UserRole;
-import com.immobilier.shared.events.UserRegisteredEvent;
 import com.immobilier.shared.dto.JwtClaims;
-import com.immobilier.auth.config.RabbitMQConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -25,7 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthUserRepository authUserRepository;
     private final JwtService          jwtService;
     private final PasswordEncoder     passwordEncoder;
-    private final RabbitTemplate      rabbitTemplate;
+    private final AuthEventPublisher  authEventPublisher;
 
     @org.springframework.beans.factory.annotation.Value("${jwt.refresh-expiration-ms:604800000}")
     private long refreshExpMs;
@@ -33,33 +33,25 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO register(RegisterRequestDTO request) {
-        if (authUserRepository.existsByEmail(request.getEmail()))
-            throw new UserAlreadyExistsException(request.getEmail());
-
-        UserRole role = resolveRegisterRole(request.getRole());
+        String email = normalizeEmail(request.getEmail());
+        if (authUserRepository.existsByEmailIgnoreCase(email))
+            throw new UserAlreadyExistsException(email);
 
         AuthUser user = AuthUser.builder()
-                .email(request.getEmail())
+                .email(email)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(role)
+                .role(UserRole.CLIENT)
                 .actif(true)
                 .build();
 
-        authUserRepository.save(user);
+        authUserRepository.saveAndFlush(user);
         log.info("Nouvel utilisateur enregistre : {}", user.getEmail());
 
-        UserRegisteredEvent event = UserRegisteredEvent.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .nom(request.getNom())
-                .role(user.getRole().name())
-                .occurredAt(Instant.now())
-                .build();
-
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.AUTH_EXCHANGE,
-                RabbitMQConfig.USER_REGISTERED_KEY,
-                event
+        authEventPublisher.publishUserRegistered(
+                user.getId(),
+                user.getEmail(),
+                request.getNom().trim(),
+                user.getRole().name()
         );
 
         return buildTokenResponse(user);
@@ -68,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO login(LoginRequestDTO request) {
-        AuthUser user = authUserRepository.findByEmail(request.getEmail())
+        AuthUser user = authUserRepository.findByEmailIgnoreCase(normalizeEmail(request.getEmail()))
                 .orElseThrow(() -> new AuthException("Identifiants invalides"));
 
         if (!user.isActif())
@@ -117,7 +109,19 @@ public class AuthServiceImpl implements AuthService {
     public JwtClaims validate(ValidateTokenRequestDTO request) {
         if (!jwtService.isAccessTokenValid(request.getToken()))
             throw new AuthException("Token invalide ou expire");
-        return jwtService.validateAndExtractAccessToken(request.getToken());
+
+        JwtClaims tokenClaims = jwtService.validateAndExtractAccessToken(request.getToken());
+        AuthUser user = authUserRepository.findById(tokenClaims.getUserId())
+                .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
+
+        if (!user.isActif())
+            throw new AuthException("Compte suspendu");
+
+        return JwtClaims.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
     }
 
     @Override
@@ -149,16 +153,42 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false);
         authUserRepository.save(user);
         log.info("Mot de passe change pour l'utilisateur : {}", user.getEmail());
     }
 
-    private UserRole resolveRegisterRole(UserRole requestedRole) {
-        if (requestedRole == null)
-            return UserRole.CLIENT;
-        if (requestedRole == UserRole.CLIENT || requestedRole == UserRole.PROPRIETAIRE)
-            return requestedRole;
-        throw new AuthException("Role non autorise pour l'inscription");
+    @Override
+    @Transactional
+    public void changeUserRole(String requesterId, String userId, UserRole newRole) {
+        AuthUser requester = authUserRepository.findById(requesterId)
+                .orElseThrow(() -> new AuthException("Administrateur introuvable"));
+
+        if (requester.getRole() != UserRole.ADMIN || !requester.isActif()) {
+            throw new AccessDeniedException("Seul un administrateur peut modifier un role");
+        }
+        if (requesterId.equals(userId)) {
+            throw new AccessDeniedException("Vous ne pouvez pas modifier votre propre role");
+        }
+        if (newRole == null || newRole == UserRole.VISITEUR) {
+            throw new IllegalArgumentException("Le role VISITEUR ne peut pas etre attribue a un compte");
+        }
+
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
+
+        UserRole oldRole = user.getRole();
+        if (oldRole == newRole) {
+            return;
+        }
+
+        user.setRole(newRole);
+        user.setRefreshToken(null);
+        user.setRefreshTokenExpiry(null);
+        authUserRepository.save(user);
+
+        authEventPublisher.publishRoleChanged(userId, oldRole.name(), newRole.name());
+        log.info("Role modifie par admin={} pour userId={} : {} -> {}", requesterId, userId, oldRole, newRole);
     }
 
     @Transactional
@@ -179,5 +209,9 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().name())
                 .mustChangePassword(Boolean.TRUE.equals(user.getMustChangePassword()))
                 .build();
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

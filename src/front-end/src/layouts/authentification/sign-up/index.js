@@ -32,7 +32,6 @@ function SignUp() {
         nom: nom.trim(),
         email: email.trim(),
         password,
-        role: "CLIENT",
       });
       saveAuthSession(data);
       if (isReservationFlow) {

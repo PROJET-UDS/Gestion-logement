@@ -104,13 +104,16 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     private UserProfile getOrCreateFromClaims(JwtClaims claims) {
-        return userProfileRepository.findById(claims.getUserId())
-                .orElseGet(() -> userProfileRepository.save(UserProfile.builder()
+        UserRole currentRole = parseRole(claims.getRole());
+        UserProfile profile = userProfileRepository.findById(claims.getUserId())
+                .orElseGet(() -> UserProfile.builder()
                         .id(claims.getUserId())
-                        .email(claims.getEmail())
-                        .role(parseRole(claims.getRole()))
-                        .actif(true)
-                        .build()));
+                        .build());
+
+        profile.setEmail(claims.getEmail());
+        profile.setRole(currentRole);
+        profile.setActif(true);
+        return userProfileRepository.save(profile);
     }
 
     private UserRole parseRole(String role) {

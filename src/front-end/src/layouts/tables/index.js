@@ -16,6 +16,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import { useNavigate } from "react-router-dom";
 import burceMars from "assets/images/bruce-mars.jpg";
+import { API_BASE_URL, authHeaders } from "services/authService";
 
 function Tables() {
   const [utilisateurs, setUtilisateurs] = useState([]);
@@ -26,9 +27,8 @@ function Tables() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8089/users", {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await fetch(`${API_BASE_URL}/users`, {
+          headers: authHeaders(),
         });
         if (response.ok) {
           const data = await response.json();
@@ -43,29 +43,11 @@ function Tables() {
     fetchUsers();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8089/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        setUtilisateurs(utilisateurs.filter((u) => u.id !== id));
-      } else {
-        setMessage("Erreur lors de la suppression");
-      }
-    } catch (err) {
-      setMessage("Erreur de connexion au serveur");
-    }
-  };
-
   // Filtrer les utilisateurs selon la recherche (nom ou email)
   const utilisateursFiltres = utilisateurs.filter((user) => {
     const texteRecherche = recherche.toLowerCase();
     return (
-      user.nom?.toLowerCase().includes(texteRecherche) ||
+      user.nomComplet?.toLowerCase().includes(texteRecherche) ||
       user.email?.toLowerCase().includes(texteRecherche)
     );
   });
@@ -80,17 +62,23 @@ function Tables() {
             mt={-3}
             py={3}
             px={2}
-            variant="gradient"
-            bgColor="info"
             borderRadius="lg"
-            coloredShadow="info"
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            sx={{
+              background: "linear-gradient(135deg, #101a33 0%, #1e315c 100%)",
+              boxShadow: "0 12px 28px rgba(16, 26, 51, 0.22)",
+            }}
           >
-            <MDTypography variant="h6" color="white">
-              Liste des Utilisateurs
-            </MDTypography>
+            <MDBox>
+              <MDTypography variant="h5" color="white" fontWeight="bold">
+                Utilisateurs
+              </MDTypography>
+              <MDTypography variant="button" color="white" opacity={0.78}>
+                Consultez les comptes et attribuez leurs rôles.
+              </MDTypography>
+            </MDBox>
           </MDBox>
 
           <MDBox pt={3} px={2}>
@@ -138,26 +126,19 @@ function Tables() {
                       </TableCell>
                       <TableCell>
                         <MDTypography variant="button" fontWeight="medium">
-                          {user.nom}
+                          {user.nomComplet || "Utilisateur"}
                         </MDTypography>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.telephone}</TableCell>
+                      <TableCell>{user.telephone || "—"}</TableCell>
                       <TableCell>{user.role || "Utilisateur"}</TableCell>
                       <TableCell align="center">
                         <MDButton
                           variant="text"
-                          color="info"
+                          color="warning"
                           onClick={() => navigate(`/tables/${user.id}`)}
                         >
-                          Voir
-                        </MDButton>
-                        <MDButton
-                          variant="text"
-                          color="error"
-                          onClick={() => handleDelete(user.id)}
-                        >
-                          Supprimer
+                          Gérer le rôle
                         </MDButton>
                       </TableCell>
                     </TableRow>

@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { getMesReservations, payerLeReste, rembourserReservation, annulerReservation } from "api/reservationApi";
+import { Link } from "react-router-dom";
+import {
+  getMesReservations,
+  payerLeReste,
+  rembourserReservation,
+  annulerReservation,
+} from "api/reservationApi";
 import { getUserId } from "services/authService";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -59,7 +65,8 @@ export default function MesReservations() {
   };
 
   const handleRembourser = async (id) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir demander un remboursement ?")) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir demander un remboursement ?"))
+      return;
     setActionLoading(id);
     try {
       await rembourserReservation(id);
@@ -72,7 +79,8 @@ export default function MesReservations() {
   };
 
   const handleAnnuler = async (id) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir annuler cette réservation ?")) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir annuler cette réservation ?"))
+      return;
     setActionLoading(id);
     try {
       await annulerReservation(id);
@@ -102,139 +110,168 @@ export default function MesReservations() {
     <DashboardLayout>
       <DashboardNavbar />
       <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Mes Réservations</h1>
-        <p style={styles.subtitle}>{reservations.length} réservation{reservations.length !== 1 ? "s" : ""}</p>
-      </div>
-
-      {error && (
-        <div style={styles.errorBanner}>
-          <span>{error}</span>
-          <button onClick={() => setError("")} style={styles.closeError}>✕</button>
-        </div>
-      )}
-
-      {reservations.length === 0 ? (
-        <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>📋</div>
-          <h3 style={styles.emptyTitle}>Aucune réservation</h3>
-          <p style={styles.emptyText}>
-            Vous n'avez pas encore de réservation. Explorez nos logements disponibles et faites votre première réservation !
+        <div style={styles.header}>
+          <h1 style={styles.title}>Mes Réservations</h1>
+          <p style={styles.subtitle}>
+            {reservations.length} réservation
+            {reservations.length !== 1 ? "s" : ""}
           </p>
-          <a href="/dashboard" style={styles.btnPrimary}>
-            Voir les logements
-          </a>
         </div>
-      ) : (
-        <div style={styles.grid}>
-          {reservations.map((res) => {
-            const statutInfo = STATUT_COLORS[res.statut] || STATUT_COLORS.EN_ATTENTE;
-            const paymentInfo = payment_COLORS[res.paymentStatut] || payment_COLORS.EN_ATTENTE;
 
-            return (
-              <div key={res.id} style={styles.card}>
-                <div style={styles.cardHeader}>
-                  <div style={styles.cardHeaderLeft}>
-                    <span style={{
-                      ...styles.statutBadge,
-                      backgroundColor: statutInfo.bg,
-                      color: statutInfo.text,
-                    }}>
-                      {statutInfo.label}
-                    </span>
-                    <span style={{
-                      ...styles.statutBadge,
-                      backgroundColor: paymentInfo.bg,
-                      color: paymentInfo.text,
-                    }}>
-                      payment: {paymentInfo.label}
-                    </span>
-                  </div>
-                  <span style={styles.cardId}>#{res.id}</span>
-                </div>
+        {error && (
+          <div style={styles.errorBanner}>
+            <span>{error}</span>
+            <button onClick={() => setError("")} style={styles.closeError}>
+              ✕
+            </button>
+          </div>
+        )}
 
-                <h3 style={styles.cardTitle}>{res.logementTitre || "Logement #" + res.logementId}</h3>
-                <p style={styles.cardAdresse}>{res.logementAdresse || "Adresse non disponible"}</p>
+        {reservations.length === 0 ? (
+          <div style={styles.emptyState}>
+            <div style={styles.emptyIcon}>📋</div>
+            <h3 style={styles.emptyTitle}>Aucune réservation</h3>
+            <p style={styles.emptyText}>
+              Vous n'avez pas encore de réservation. Explorez nos logements
+              disponibles et faites votre première réservation !
+            </p>
+            <Link to="/annonces" style={styles.btnPrimary}>
+              Voir les logements
+            </Link>
+          </div>
+        ) : (
+          <div style={styles.grid}>
+            {reservations.map((res) => {
+              const statutInfo =
+                STATUT_COLORS[res.statut] || STATUT_COLORS.EN_ATTENTE;
+              const paymentInfo =
+                payment_COLORS[res.paymentStatut] || payment_COLORS.EN_ATTENTE;
 
-                <div style={styles.cardDates}>
-                  <div style={styles.dateItem}>
-                    <span style={styles.dateLabel}>Début</span>
-                    <span style={styles.dateValue}>{res.dateDebut}</span>
+              return (
+                <div key={res.id} style={styles.card}>
+                  <div style={styles.cardHeader}>
+                    <div style={styles.cardHeaderLeft}>
+                      <span
+                        style={{
+                          ...styles.statutBadge,
+                          backgroundColor: statutInfo.bg,
+                          color: statutInfo.text,
+                        }}
+                      >
+                        {statutInfo.label}
+                      </span>
+                      <span
+                        style={{
+                          ...styles.statutBadge,
+                          backgroundColor: paymentInfo.bg,
+                          color: paymentInfo.text,
+                        }}
+                      >
+                        payment: {paymentInfo.label}
+                      </span>
+                    </div>
+                    <span style={styles.cardId}>#{res.id}</span>
                   </div>
-                  <div style={styles.dateDivider}>→</div>
-                  <div style={styles.dateItem}>
-                    <span style={styles.dateLabel}>Fin</span>
-                    <span style={styles.dateValue}>{res.dateFin}</span>
-                  </div>
-                </div>
 
-                {res.joursRestants > 0 && res.statut !== "ANNULEE" && (
-                  <div style={styles.joursRestants}>
-                    <span style={styles.joursNumber}>{res.joursRestants}</span>
-                    <span style={styles.joursLabel}>
-                      jour{res.joursRestants > 1 ? "s" : ""} restant{res.joursRestants > 1 ? "s" : ""}
-                    </span>
-                  </div>
-                )}
+                  <h3 style={styles.cardTitle}>
+                    {res.logementTitre || "Logement #" + res.logementId}
+                  </h3>
+                  <p style={styles.cardAdresse}>
+                    {res.logementAdresse || "Adresse non disponible"}
+                  </p>
 
-                <div style={styles.prixSection}>
-                  <div style={styles.prixRow}>
-                    <span style={styles.prixLabel}>Prix du logement</span>
-                    <span style={styles.prixValue}>{formatMontant(res.prixLogement)} FCFA</span>
+                  <div style={styles.cardDates}>
+                    <div style={styles.dateItem}>
+                      <span style={styles.dateLabel}>Début</span>
+                      <span style={styles.dateValue}>{res.dateDebut}</span>
+                    </div>
+                    <div style={styles.dateDivider}>→</div>
+                    <div style={styles.dateItem}>
+                      <span style={styles.dateLabel}>Fin</span>
+                      <span style={styles.dateValue}>{res.dateFin}</span>
+                    </div>
                   </div>
-                  <div style={styles.prixRow}>
-                    <span style={styles.prixLabel}>Dépôt payé (10%)</span>
-                    <span style={{...styles.prixValue, color: "#059669"}}>{formatMontant(res.montantReservation)} FCFA</span>
-                  </div>
-                  {res.montantRestant > 0 && (
-                    <div style={styles.prixRow}>
-                      <span style={styles.prixLabel}>Reste à payer</span>
-                      <span style={{...styles.prixValue, color: "#E67E22"}}>{formatMontant(res.montantRestant)} FCFA</span>
+
+                  {res.joursRestants > 0 && res.statut !== "ANNULEE" && (
+                    <div style={styles.joursRestants}>
+                      <span style={styles.joursNumber}>
+                        {res.joursRestants}
+                      </span>
+                      <span style={styles.joursLabel}>
+                        jour{res.joursRestants > 1 ? "s" : ""} restant
+                        {res.joursRestants > 1 ? "s" : ""}
+                      </span>
                     </div>
                   )}
+
+                  <div style={styles.prixSection}>
+                    <div style={styles.prixRow}>
+                      <span style={styles.prixLabel}>Prix du logement</span>
+                      <span style={styles.prixValue}>
+                        {formatMontant(res.prixLogement)} FCFA
+                      </span>
+                    </div>
+                    <div style={styles.prixRow}>
+                      <span style={styles.prixLabel}>Dépôt payé (10%)</span>
+                      <span style={{ ...styles.prixValue, color: "#059669" }}>
+                        {formatMontant(res.montantReservation)} FCFA
+                      </span>
+                    </div>
+                    {res.montantRestant > 0 && (
+                      <div style={styles.prixRow}>
+                        <span style={styles.prixLabel}>Reste à payer</span>
+                        <span style={{ ...styles.prixValue, color: "#E67E22" }}>
+                          {formatMontant(res.montantRestant)} FCFA
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {res.methodepayment && (
+                    <p style={styles.methode}>Méthode: {res.methodepayment}</p>
+                  )}
+
+                  <div style={styles.actions}>
+                    {res.paymentStatut === "PAYE" && res.montantRestant > 0 && (
+                      <button
+                        onClick={() => handlePayerLeReste(res.id)}
+                        disabled={actionLoading === res.id}
+                        style={styles.btnPayer}
+                      >
+                        {actionLoading === res.id ? "..." : "Payer le reste"}
+                      </button>
+                    )}
+
+                    {res.paymentStatut === "PAYE" &&
+                      res.statut !== "ANNULEE" && (
+                        <button
+                          onClick={() => handleRembourser(res.id)}
+                          disabled={actionLoading === res.id}
+                          style={styles.btnRembourser}
+                        >
+                          {actionLoading === res.id
+                            ? "..."
+                            : "Demander remboursement"}
+                        </button>
+                      )}
+
+                    {res.paymentStatut === "EN_ATTENTE" &&
+                      res.statut === "EN_ATTENTE" && (
+                        <button
+                          onClick={() => handleAnnuler(res.id)}
+                          disabled={actionLoading === res.id}
+                          style={styles.btnAnnuler}
+                        >
+                          {actionLoading === res.id ? "..." : "Annuler"}
+                        </button>
+                      )}
+                  </div>
                 </div>
-
-                {res.methodepayment && (
-                  <p style={styles.methode}>Méthode: {res.methodepayment}</p>
-                )}
-
-                <div style={styles.actions}>
-                  {res.paymentStatut === "PAYE" && res.montantRestant > 0 && (
-                    <button
-                      onClick={() => handlePayerLeReste(res.id)}
-                      disabled={actionLoading === res.id}
-                      style={styles.btnPayer}
-                    >
-                      {actionLoading === res.id ? "..." : "Payer le reste"}
-                    </button>
-                  )}
-
-                  {res.paymentStatut === "PAYE" && res.statut !== "ANNULEE" && (
-                    <button
-                      onClick={() => handleRembourser(res.id)}
-                      disabled={actionLoading === res.id}
-                      style={styles.btnRembourser}
-                    >
-                      {actionLoading === res.id ? "..." : "Demander remboursement"}
-                    </button>
-                  )}
-
-                  {res.paymentStatut === "EN_ATTENTE" && res.statut === "EN_ATTENTE" && (
-                    <button
-                      onClick={() => handleAnnuler(res.id)}
-                      disabled={actionLoading === res.id}
-                      style={styles.btnAnnuler}
-                    >
-                      {actionLoading === res.id ? "..." : "Annuler"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 }
