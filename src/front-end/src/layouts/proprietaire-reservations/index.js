@@ -13,7 +13,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import Footer from "examples/Footer";
-import { getReservationsProprietaire } from "api/reservationApi";
+import {
+  getReservationsProprietaire,
+  getToutesReservations,
+} from "api/reservationApi";
+import { getUserRole } from "services/authService";
 
 const STATUT_COLORS = {
   EN_ATTENTE: "warning",
@@ -29,24 +33,28 @@ const PAYMENT_COLORS = {
 };
 
 function ProprietaireReservations() {
+  const role = getUserRole();
+  const isAdmin = role === "ADMIN";
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadReservations();
-  }, []);
+    const loadReservations = async () => {
+      try {
+        const data = await (isAdmin
+          ? getToutesReservations()
+          : getReservationsProprietaire());
+        setReservations(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadReservations = async () => {
-    try {
-      const data = await getReservationsProprietaire();
-      setReservations(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadReservations();
+  }, [isAdmin]);
 
   const formatDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR") : "-");
 
@@ -55,7 +63,9 @@ function ProprietaireReservations() {
       <DashboardNavbar />
       <MDBox py={3}>
         <MDTypography variant="h4" fontWeight="medium" mb={3}>
-          Réservations de mes logements
+          {isAdmin
+            ? "Toutes les réservations"
+            : "Réservations de mes logements"}
         </MDTypography>
         {error && (
           <MDBox mb={2} p={2} bgColor="error" borderRadius="md">
@@ -86,7 +96,9 @@ function ProprietaireReservations() {
                   {reservations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} align="center">
-                        Aucune réservation pour vos logements
+                        {isAdmin
+                          ? "Aucune réservation sur la plateforme"
+                          : "Aucune réservation pour vos logements"}
                       </TableCell>
                     </TableRow>
                   ) : (

@@ -75,6 +75,13 @@ const routes = [
     roles: ["PROPRIETAIRE"],
   },
   {
+    route: "/reservations",
+    key: "all-reservations",
+    component: <ProprietaireReservations />,
+    roles: ["ADMIN"],
+    hideInSidenav: true,
+  },
+  {
     type: "collapse",
     name: "Paiements",
     key: "billing",
@@ -146,6 +153,8 @@ const routes = [
     route: "/tables/:id",
     key: "user-detail",
     component: <UserDetail />,
+    roles: ["ADMIN"],
+    hideInSidenav: true,
   },
   {
     route: "/ajouter-logement",

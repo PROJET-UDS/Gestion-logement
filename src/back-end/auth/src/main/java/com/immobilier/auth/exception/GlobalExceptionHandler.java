@@ -1,6 +1,8 @@
 package com.immobilier.auth.exception;
 
 import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +23,22 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, "USER_ALREADY_EXISTS", ex.getMessage());
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", ex.getMessage());
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex) {
+        return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Donnees invalides");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new LinkedHashMap<>();
         for (FieldError fe : ex.getBindingResult().getFieldErrors())
             errors.put(fe.getField(), fe.getDefaultMessage());
-        Map<String, Object> body = body(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "DonnÃ©es invalides");
+        Map<String, Object> body = body(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Donnees invalides");
         body.put("errors", errors);
         return ResponseEntity.badRequest().body(body);
     }

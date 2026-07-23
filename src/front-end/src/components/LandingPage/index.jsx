@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 import Icon from "@mui/material/Icon";
@@ -30,6 +30,7 @@ const TYPE_LABELS = {
 
 function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [logements, setLogements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -59,6 +60,20 @@ function LandingPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    const scrollTarget = location.state?.scrollTo;
+    if (!scrollTarget) return;
+
+    const scrollTimer = window.setTimeout(() => {
+      document
+        .getElementById(scrollTarget)
+        ?.scrollIntoView({ behavior: "smooth" });
+      navigate(location.pathname, { replace: true, state: null });
+    }, 0);
+
+    return () => window.clearTimeout(scrollTimer);
+  }, [location.pathname, location.state, navigate]);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -108,13 +123,18 @@ function LandingPage() {
                   quelques étapes et gérez tout depuis un espace unique.
                 </p>
                 <div className="landing-hero__actions">
-                  <a
+                  <button
+                    type="button"
                     className="public-button public-button--accent"
-                    href="#proprietes"
+                    onClick={() =>
+                      document
+                        .getElementById("proprietes")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
                   >
                     Voir les logements
                     <Icon>arrow_forward</Icon>
-                  </a>
+                  </button>
                   <Link className="landing-text-link" to={accountPath}>
                     {isAuthenticated()
                       ? "Ouvrir mon espace"

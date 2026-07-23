@@ -9,7 +9,6 @@ const USER_ID_KEY = "userId";
 const LEGACY_TOKEN_KEY = "token";
 
 export const AUTHENTICATED_ROLES = ["CLIENT", "PROPRIETAIRE", "ADMIN"];
-export const REGISTER_ROLES = ["CLIENT", "PROPRIETAIRE"];
 
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);
@@ -83,6 +82,26 @@ export async function register(payload) {
   return authRequest("/auth/register", payload);
 }
 
+export async function changeUserRole(userId, role) {
+  const response = await fetch(
+    `${API_BASE_URL}/auth/users/${encodeURIComponent(userId)}/role`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(),
+      },
+      body: JSON.stringify({ role }),
+    }
+  );
+
+  const data = await parseResponse(response);
+  if (!response.ok) {
+    throw new Error(getErrorMessage(data, "Impossible de modifier le rôle"));
+  }
+  return data;
+}
+
 export async function logout() {
   const refreshToken = getRefreshToken();
   try {
@@ -106,7 +125,7 @@ async function authRequest(path, body) {
 
   const data = await parseResponse(response);
   if (!response.ok) {
-    throw new Error(data?.message || "Erreur d'authentification");
+    throw new Error(getErrorMessage(data, "Erreur d'authentification"));
   }
   return data;
 }
@@ -117,6 +136,16 @@ async function parseResponse(response) {
     return null;
   }
   return response.json();
+}
+
+function getErrorMessage(data, fallback) {
+  if (data?.errors && typeof data.errors === "object") {
+    const firstError = Object.values(data.errors)[0];
+    if (firstError) {
+      return firstError;
+    }
+  }
+  return data?.message || fallback;
 }
 
 function isTokenExpired(token) {

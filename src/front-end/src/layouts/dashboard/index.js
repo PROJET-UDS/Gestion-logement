@@ -2,20 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Card from "@mui/material/Card";
-import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 
 import MDBox from "components/MDBox";
-import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
+import RecentReservationsTable from "components/RecentReservationsTable";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import Footer from "examples/Footer";
@@ -24,6 +17,7 @@ import { getLogementsPublic, getMesLogements } from "api/logementApi";
 import {
   getMesReservations,
   getReservationsProprietaire,
+  getToutesReservations,
 } from "api/reservationApi";
 import { API_BASE_URL, authHeaders, getUserRole } from "services/authService";
 
@@ -49,22 +43,6 @@ const ROLE_CONTENT = {
       "Retrouvez vos réservations et poursuivez votre recherche de logement.",
     icon: "travel_explore",
   },
-};
-
-const STATUS_COLORS = {
-  EN_ATTENTE: "warning",
-  CONFIRMEE: "success",
-  ANNULEE: "error",
-  TERMINEE: "info",
-};
-
-const PAYMENT_COLORS = {
-  EN_ATTENTE: "warning",
-  PAYE: "success",
-  SUCCESS: "success",
-  PENDING: "warning",
-  REMBOURSE: "info",
-  FAILED: "error",
 };
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
@@ -105,6 +83,10 @@ function Dashboard() {
         requests.push({
           key: "pendingLogements",
           promise: getPendingLogements(),
+        });
+        requests.push({
+          key: "reservations",
+          promise: getToutesReservations(),
         });
       }
       if (role === "PROPRIETAIRE") {
@@ -199,11 +181,11 @@ function Dashboard() {
             label: "Sur la plateforme",
           },
           {
-            title: "Total suivi",
-            count: publishedCount + dashboardData.pendingLogements.length,
-            icon: "analytics",
+            title: "Réservations",
+            count: dashboardData.reservations.length,
+            icon: "calendar_month",
             color: "info",
-            label: "Publiés et en attente",
+            label: "Activité globale",
           },
         ]
       : role === "PROPRIETAIRE"
@@ -321,25 +303,6 @@ function Dashboard() {
           },
         ];
 
-  const formatDate = (date) =>
-    date
-      ? new Date(date).toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })
-      : "—";
-
-  const reservationAmount = (reservation) => {
-    const amount =
-      reservation.montantTotal ??
-      reservation.prixLogement ??
-      reservation.montant;
-    return amount == null
-      ? "—"
-      : `${Number(amount).toLocaleString("fr-FR")} FCFA`;
-  };
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -456,291 +419,107 @@ function Dashboard() {
             </Grid>
 
             <MDBox mt={3}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} lg={8}>
-                  <Card sx={{ height: "100%" }}>
-                    <MDBox p={3}>
-                      <MDBox
-                        mb={3}
-                        display="flex"
-                        alignItems={{ xs: "flex-start", sm: "center" }}
-                        justifyContent="space-between"
-                        flexDirection={{ xs: "column", sm: "row" }}
-                        gap={1}
-                      >
-                        <MDBox>
-                          <MDTypography variant="h5" fontWeight="medium">
-                            {role === "ADMIN"
-                              ? "État des annonces"
-                              : "Réservations récentes"}
-                          </MDTypography>
-                          <MDTypography variant="body2" color="text" mt={0.5}>
-                            {role === "ADMIN"
-                              ? "Une vue synthétique du catalogue actuellement visible."
-                              : "Les dernières informations utiles de votre activité."}
-                          </MDTypography>
-                        </MDBox>
-                        {role !== "ADMIN" &&
-                          dashboardData.reservations.length > 0 && (
-                            <MDButton
-                              variant="text"
-                              color="info"
-                              size="small"
-                              onClick={() =>
-                                navigate(
-                                  role === "PROPRIETAIRE"
-                                    ? "/proprietaire/reservations"
-                                    : "/mes-reservations"
-                                )
-                              }
-                            >
-                              Tout afficher
-                              <Icon sx={{ ml: 0.5, fontSize: 17 }}>
-                                arrow_forward
-                              </Icon>
-                            </MDButton>
-                          )}
-                      </MDBox>
+              <RecentReservationsTable
+                reservations={dashboardData.reservations}
+                onViewAll={() =>
+                  navigate(
+                    role === "ADMIN"
+                      ? "/reservations"
+                      : role === "PROPRIETAIRE"
+                      ? "/proprietaire/reservations"
+                      : "/mes-reservations"
+                  )
+                }
+                emptyMessage={
+                  role === "ADMIN"
+                    ? "Les réservations de la plateforme apparaîtront ici."
+                    : role === "PROPRIETAIRE"
+                    ? "Les demandes liées à vos logements apparaîtront ici."
+                    : "Explorez les annonces pour effectuer votre première réservation."
+                }
+              />
+            </MDBox>
 
-                      {role === "ADMIN" ? (
-                        <Grid container spacing={2}>
-                          {[
-                            {
-                              label: "Annonces publiées",
-                              value: publishedCount,
-                              icon: "campaign",
-                              color: "#e8f1ff",
-                            },
-                            {
-                              label: "Logements disponibles",
-                              value: availableCount,
-                              icon: "key",
-                              color: "#e8f7ee",
-                            },
-                            {
-                              label: "En attente de validation",
-                              value: dashboardData.pendingLogements.length,
-                              icon: "hourglass_top",
-                              color: "#fff4d8",
-                            },
-                          ].map((item) => (
-                            <Grid item xs={12} sm={4} key={item.label}>
-                              <MDBox
-                                p={2.5}
-                                height="100%"
-                                borderRadius="lg"
-                                sx={{ background: item.color }}
-                              >
-                                <Icon sx={{ color: "#1b2944" }}>
-                                  {item.icon}
-                                </Icon>
-                                <MDTypography
-                                  variant="h4"
-                                  fontWeight="bold"
-                                  mt={1}
-                                >
-                                  {item.value}
-                                </MDTypography>
-                                <MDTypography variant="caption" color="text">
-                                  {item.label}
-                                </MDTypography>
-                              </MDBox>
-                            </Grid>
-                          ))}
-                          <Grid item xs={12}>
-                            <MDButton
-                              variant="gradient"
-                              color="warning"
-                              onClick={() => navigate("/admin/validation")}
-                            >
-                              Ouvrir la file de validation
-                            </MDButton>
-                          </Grid>
-                        </Grid>
-                      ) : dashboardData.reservations.length === 0 ? (
+            <MDBox mt={3}>
+              <Card>
+                <MDBox p={3}>
+                  <MDTypography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ color: "#243a63" }}
+                  >
+                    Accès rapides
+                  </MDTypography>
+                  <MDTypography variant="body2" color="text" mt={0.5} mb={2.5}>
+                    Les actions les plus utiles pour votre profil.
+                  </MDTypography>
+                  <Grid container spacing={2}>
+                    {quickActions.map((action) => (
+                      <Grid item xs={12} md={6} key={action.title}>
                         <MDBox
-                          py={5}
-                          px={2}
+                          component="button"
+                          type="button"
+                          onClick={() => navigate(action.path)}
+                          width="100%"
+                          height="100%"
+                          p={2}
                           display="flex"
                           alignItems="center"
-                          flexDirection="column"
-                          textAlign="center"
-                          sx={{ background: "#f8f9fb", borderRadius: 2 }}
+                          gap={1.5}
+                          textAlign="left"
+                          sx={{
+                            border: "1px solid #e7eaf0",
+                            borderRadius: 2,
+                            background: "#fff",
+                            cursor: "pointer",
+                            transition:
+                              "transform .18s ease, box-shadow .18s ease",
+                            "&:hover": {
+                              transform: "translateY(-2px)",
+                              boxShadow: "0 10px 24px rgba(16,24,43,.08)",
+                            },
+                          }}
                         >
-                          <Icon sx={{ fontSize: 44, color: "#a7afbf" }}>
-                            event_busy
-                          </Icon>
-                          <MDTypography variant="h6" mt={1.5}>
-                            Aucune réservation pour le moment
-                          </MDTypography>
-                          <MDTypography
-                            variant="body2"
-                            color="text"
-                            mt={0.5}
-                            mb={2}
-                          >
-                            {role === "PROPRIETAIRE"
-                              ? "Les demandes liées à vos logements apparaîtront ici."
-                              : "Explorez les annonces pour trouver votre prochain logement."}
-                          </MDTypography>
-                          <MDButton
-                            variant="gradient"
-                            color="warning"
-                            size="small"
-                            onClick={() =>
-                              navigate(
-                                role === "PROPRIETAIRE"
-                                  ? "/mes-logements"
-                                  : "/annonces"
-                              )
-                            }
-                          >
-                            {role === "PROPRIETAIRE"
-                              ? "Voir mes logements"
-                              : "Voir les annonces"}
-                          </MDButton>
-                        </MDBox>
-                      ) : (
-                        <TableContainer>
-                          <Table>
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Logement</TableCell>
-                                <TableCell>Dates</TableCell>
-                                <TableCell>Montant</TableCell>
-                                <TableCell>Statut</TableCell>
-                                <TableCell>Paiement</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {dashboardData.reservations
-                                .slice(0, 5)
-                                .map((reservation) => (
-                                  <TableRow key={reservation.id}>
-                                    <TableCell>
-                                      {reservation.logementTitre ||
-                                        `Logement #${reservation.logementId}`}
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatDate(reservation.dateDebut)} –{" "}
-                                      {formatDate(reservation.dateFin)}
-                                    </TableCell>
-                                    <TableCell>
-                                      {reservationAmount(reservation)}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Chip
-                                        label={reservation.statut || "—"}
-                                        color={
-                                          STATUS_COLORS[reservation.statut] ||
-                                          "default"
-                                        }
-                                        size="small"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Chip
-                                        label={reservation.paymentStatut || "—"}
-                                        color={
-                                          PAYMENT_COLORS[
-                                            reservation.paymentStatut
-                                          ] || "default"
-                                        }
-                                        size="small"
-                                        variant="outlined"
-                                      />
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      )}
-                    </MDBox>
-                  </Card>
-                </Grid>
-
-                <Grid item xs={12} lg={4}>
-                  <Card sx={{ height: "100%" }}>
-                    <MDBox p={3}>
-                      <MDTypography variant="h5" fontWeight="medium">
-                        Accès rapides
-                      </MDTypography>
-                      <MDTypography
-                        variant="body2"
-                        color="text"
-                        mt={0.5}
-                        mb={2.5}
-                      >
-                        Les actions les plus utiles pour votre profil.
-                      </MDTypography>
-                      <MDBox display="flex" flexDirection="column" gap={1.5}>
-                        {quickActions.map((action) => (
                           <MDBox
-                            key={action.title}
-                            component="button"
-                            type="button"
-                            onClick={() => navigate(action.path)}
-                            width="100%"
-                            p={2}
+                            width="2.8rem"
+                            height="2.8rem"
                             display="flex"
                             alignItems="center"
-                            gap={1.5}
-                            textAlign="left"
+                            justifyContent="center"
+                            borderRadius="lg"
+                            flexShrink={0}
                             sx={{
-                              border: "1px solid #e7eaf0",
-                              borderRadius: 2,
-                              background: "#fff",
-                              cursor: "pointer",
-                              transition:
-                                "transform .18s ease, box-shadow .18s ease",
-                              "&:hover": {
-                                transform: "translateY(-2px)",
-                                boxShadow: "0 10px 24px rgba(16,24,43,.08)",
-                              },
+                              color: "#1b2944",
+                              background: action.color,
                             }}
                           >
-                            <MDBox
-                              width="2.8rem"
-                              height="2.8rem"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                              borderRadius="lg"
-                              flexShrink={0}
-                              sx={{
-                                color: "#1b2944",
-                                background: action.color,
-                              }}
-                            >
-                              <Icon>{action.icon}</Icon>
-                            </MDBox>
-                            <MDBox flex={1}>
-                              <MDTypography
-                                variant="button"
-                                fontWeight="bold"
-                                display="block"
-                              >
-                                {action.title}
-                              </MDTypography>
-                              <MDTypography
-                                variant="caption"
-                                color="text"
-                                lineHeight={1.45}
-                              >
-                                {action.description}
-                              </MDTypography>
-                            </MDBox>
-                            <Icon sx={{ color: "#a7afbf", fontSize: 19 }}>
-                              chevron_right
-                            </Icon>
+                            <Icon>{action.icon}</Icon>
                           </MDBox>
-                        ))}
-                      </MDBox>
-                    </MDBox>
-                  </Card>
-                </Grid>
-              </Grid>
+                          <MDBox flex={1}>
+                            <MDTypography
+                              variant="button"
+                              fontWeight="bold"
+                              display="block"
+                            >
+                              {action.title}
+                            </MDTypography>
+                            <MDTypography
+                              variant="caption"
+                              color="text"
+                              lineHeight={1.45}
+                            >
+                              {action.description}
+                            </MDTypography>
+                          </MDBox>
+                          <Icon sx={{ color: "#a7afbf", fontSize: 19 }}>
+                            chevron_right
+                          </Icon>
+                        </MDBox>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </MDBox>
+              </Card>
             </MDBox>
           </>
         )}

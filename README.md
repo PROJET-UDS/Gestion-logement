@@ -57,39 +57,53 @@ npm start
 
 ## Comptes de test
 
-### Compte administrateur (cree automatiquement au demarrage)
+### Comptes initialisés au démarrage
 
-| Champ        | Valeur                          |
-|--------------|---------------------------------|
-| Email        | `admin@gestion-logement.local`  |
-| Mot de passe | `Admin@12345`                   |
-| Role         | ADMIN                           |
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| ADMIN | `admin@gestion-logement.local` | `Admin@12345` |
+| PROPRIETAIRE | `proprietaire@gestion-logement.local` | `Proprietaire@12345` |
+| CLIENT | `client@gestion-logement.local` | `Client@12345` |
 
-> Ce compte est cree automatiquement au premier demarrage du service auth. Si les variables d'environnement `DEFAULT_ADMIN_EMAIL` et `DEFAULT_ADMIN_PASSWORD` sont definies, elles remplacent les valeurs par defaut.
+> Ces comptes sont créés uniquement s'ils n'existent pas et sont marqués pour
+> un changement de mot de passe. Les variables `DEFAULT_ADMIN_*`,
+> `DEFAULT_PROPRIETAIRE_*` et `DEFAULT_CLIENT_*` remplacent les valeurs par
+> défaut. Définissez `DEFAULT_USERS_INITIALIZATION_ENABLED=false` pour ne pas
+> créer les deux comptes de démonstration; l'administrateur système reste
+> initialisé.
 
-### Comptes a creer via l'API (inscription)
+### Création d'un compte utilisateur
 
-Pour tester les differents roles, inscrivez-vous via `POST /api/v1/auth/register` :
+L'inscription publique se fait via `POST /auth/register`. Le rôle n'est jamais
+envoyé par le navigateur : tout nouveau compte reçoit automatiquement le rôle
+`CLIENT`.
 
 ```json
 {
   "email": "client@test.com",
   "password": "Client@12345",
-  "nom": "Dupont",
-  "prenom": "Jean",
-  "role": "CLIENT"
+  "nom": "Jean Dupont"
 }
+```
+
+Pour transformer ensuite ce compte en propriétaire, un administrateur utilise
+la page **Utilisateurs** ou l'API protégée :
+
+```http
+PATCH /auth/users/{userId}/role
+Authorization: Bearer <token-administrateur>
+Content-Type: application/json
 ```
 
 ```json
 {
-  "email": "proprietaire@test.com",
-  "password": "Proprio@12345",
-  "nom": "Kamga",
-  "prenom": "Paul",
   "role": "PROPRIETAIRE"
 }
 ```
+
+Les profils de `user_db` sont initialisés à partir du rôle conservé dans
+`auth_db`. Le profil administrateur par défaut est également synchronisé au
+démarrage.
 
 ### Cartes bancaires de test (paiement simule)
 

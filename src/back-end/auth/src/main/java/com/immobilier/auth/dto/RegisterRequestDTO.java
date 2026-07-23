@@ -1,6 +1,5 @@
 package com.immobilier.auth.dto;
 
-import com.immobilier.shared.enums.UserRole;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -10,6 +9,10 @@ public class RegisterRequestDTO {
     @Email(message = "Format email invalide")
     private String email;
 
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
     @NotBlank(message = "Le nom est obligatoire")
     @Size(min = 2, max = 120, message = "Le nom doit contenir entre 2 et 120 caracteres")
     private String nom;
@@ -17,6 +20,4 @@ public class RegisterRequestDTO {
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 8, message = "Minimum 8 caracteres")
     private String password;
-
-    private UserRole role;
 }

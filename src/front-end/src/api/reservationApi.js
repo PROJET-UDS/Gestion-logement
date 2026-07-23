@@ -65,6 +65,15 @@ export async function getReservationsProprietaire() {
   return response.json();
 }
 
+export async function getToutesReservations() {
+  const response = await fetch(`${API_BASE_URL}/api/reservations`, {
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok)
+    throw new Error("Erreur lors du chargement de toutes les réservations");
+  return response.json();
+}
+
 export async function annulerReservation(id) {
   const response = await fetch(
     `${API_BASE_URL}/api/reservations/${id}/annuler`,

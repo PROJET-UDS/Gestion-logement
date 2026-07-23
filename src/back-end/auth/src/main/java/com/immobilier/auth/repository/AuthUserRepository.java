@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface AuthUserRepository extends JpaRepository<AuthUser, String> {
     Optional<AuthUser> findByEmail(String email);
     boolean existsByEmail(String email);
+    Optional<AuthUser> findByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCase(String email);
 }

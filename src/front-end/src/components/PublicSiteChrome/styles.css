@@ -92,11 +92,16 @@
 }
 
 .public-header__links > a,
+.public-header__links > button,
 .public-header__auth > a:first-child {
   position: relative;
   color: rgba(255, 255, 255, 0.76);
   padding: 10px 11px;
+  background: transparent;
+  border: 0;
   border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
@@ -104,13 +109,16 @@
 }
 
 .public-header__links > a:hover,
+.public-header__links > button:hover,
 .public-header__links > a.is-active,
+.public-header__links > button.is-active,
 .public-header__auth > a:first-child:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.public-header__links > a.is-active::after {
+.public-header__links > a.is-active::after,
+.public-header__links > button.is-active::after {
   content: "";
   position: absolute;
   right: 12px;
@@ -271,14 +279,21 @@
   gap: 8px 22px;
 }
 
-.public-footer__links a {
+.public-footer__links a,
+.public-footer__links button {
   color: rgba(255, 255, 255, 0.76);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
 }
 
-.public-footer__links a:hover {
+.public-footer__links a:hover,
+.public-footer__links button:hover {
   color: var(--public-gold);
 }
 

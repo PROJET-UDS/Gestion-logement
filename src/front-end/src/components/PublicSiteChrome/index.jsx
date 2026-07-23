@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
@@ -22,12 +22,13 @@ const ROLE_LABELS = {
 const PUBLIC_LINKS = [
   { label: "Accueil", to: "/", key: "home" },
   { label: "Annonces", to: "/annonces", key: "annonces" },
-  { label: "À propos", to: "/#apropos", key: "about" },
-  { label: "Contact", to: "/#contact", key: "contact" },
+  { label: "À propos", section: "apropos", key: "about" },
+  { label: "Contact", section: "contact", key: "contact" },
 ];
 
 function PublicHeader({ active = "" }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [authenticated, setAuthenticated] = useState(() => isAuthenticated());
@@ -41,6 +42,15 @@ function PublicHeader({ active = "" }) {
   const goTo = (path) => {
     closeMenus();
     navigate(path);
+  };
+
+  const goToSection = (section) => {
+    closeMenus();
+    if (location.pathname === "/") {
+      document.getElementById(section)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    navigate("/", { state: { scrollTo: section } });
   };
 
   const handleLogout = async () => {
@@ -84,15 +94,15 @@ function PublicHeader({ active = "" }) {
         >
           <div className="public-header__links">
             {PUBLIC_LINKS.map((link) =>
-              link.to.includes("#") ? (
-                <a
+              link.section ? (
+                <button
+                  type="button"
                   key={link.key}
-                  href={link.to}
                   className={active === link.key ? "is-active" : ""}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => goToSection(link.section)}
                 >
                   {link.label}
-                </a>
+                </button>
               ) : (
                 <Link
                   key={link.key}
@@ -215,6 +225,17 @@ function PublicHeader({ active = "" }) {
 }
 
 function PublicFooter() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const goToSection = (section) => {
+    if (location.pathname === "/") {
+      document.getElementById(section)?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    navigate("/", { state: { scrollTo: section } });
+  };
+
   return (
     <footer className="public-footer">
       <div className="public-footer__inner">
@@ -235,8 +256,12 @@ function PublicFooter() {
         >
           <Link to="/">Accueil</Link>
           <Link to="/annonces">Annonces</Link>
-          <a href="/#apropos">À propos</a>
-          <a href="/#contact">Contact</a>
+          <button type="button" onClick={() => goToSection("apropos")}>
+            À propos
+          </button>
+          <button type="button" onClick={() => goToSection("contact")}>
+            Contact
+          </button>
         </div>
       </div>
       <div className="public-footer__legal">
