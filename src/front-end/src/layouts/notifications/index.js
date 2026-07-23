@@ -22,7 +22,7 @@ const API_BASE_URL =
   (typeof process !== "undefined" &&
     process.env &&
     process.env.REACT_APP_API_BASE_URL) ||
-  "http://localhost:8089";
+  "";
 
 function Notifications() {
   const [subscribers, setSubscribers] = useState([]);

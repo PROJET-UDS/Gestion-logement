@@ -2,7 +2,7 @@ import { authHeaders } from "services/authService";
 
 const API_BASE_URL =
   (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
-  "http://localhost:8089";
+  "";
 
 async function apiRequest(path, options = {}) {
   const headers = {
