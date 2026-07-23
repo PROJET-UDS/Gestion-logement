@@ -68,7 +68,7 @@ services:
       RABBITMQ_USERNAME: immobilier
       RABBITMQ_PASSWORD: secret
       EUREKA_URL: http://discover:8761/eureka/
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
+      CORS_ALLOWED_ORIGINS: https://6126kvl0-3000.use2.devtunnels.ms,http://localhost:3000,http://localhost:3001
     depends_on:
       postgres:
         condition: service_started
