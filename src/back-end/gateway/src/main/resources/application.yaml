@@ -10,6 +10,9 @@ spring:
         cors-configurations:
           '[/**]':
             allowedOriginPatterns:
+              - "https://6126kvl0-3000.use2.devtunnels.ms"
+              - "http://localhost:3000"
+              - "http://localhost:3001"
               - "*"
             allowedMethods:
               - GET
@@ -23,6 +26,7 @@ spring:
             allowCredentials: true
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+        - AddResponseHeader=Access-Control-Allow-Private-Network, true
       routes:
         - id: auth
           uri: lb://auth

@@ -54,7 +54,7 @@ management:
       show-details: always
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://6126kvl0-3000.use2.devtunnels.ms,http://localhost:3000,http://localhost:3001}
 
 jwt:
   secret: ${JWT_SECRET:cle_secrete_pour_le_jwt_2024_avec_256_bits_minimum}
