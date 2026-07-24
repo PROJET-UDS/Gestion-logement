@@ -233,12 +233,14 @@ public class ReservationService {
 
     private void verifierDisponibilite(Long logementId, LocalDate dateDebut,
                                         LocalDate dateFin, Long reservationIdAExclure) {
-        List<Reservation> conflits = (reservationIdAExclure == null)
-                ? reservationRepository.findReservationsChevauchantes(logementId, dateDebut, dateFin)
-                : reservationRepository.findReservationsChevauchantesSauf(
-                logementId, dateDebut, dateFin, reservationIdAExclure);
+        List<Reservation> toutes = reservationRepository.findByLogementId(logementId);
 
-        if (!conflits.isEmpty()) {
+        boolean indisponible = toutes.stream()
+                .filter(r -> r.getStatut() != StatutReservation.ANNULEE)
+                .filter(r -> reservationIdAExclure == null || !r.getId().equals(reservationIdAExclure))
+                .anyMatch(r -> !r.getDateDebut().isAfter(dateFin) && !r.getDateFin().isBefore(dateDebut));
+
+        if (indisponible) {
             throw new LogementIndisponibleException(
                     "Le logement n'est pas disponible pour la période du " + dateDebut + " au " + dateFin);
         }

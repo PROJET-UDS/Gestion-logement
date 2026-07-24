@@ -115,6 +115,16 @@ public class AuthController {
         ));
     }
 
+    @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> supprimerUtilisateur(
+            Authentication authentication,
+            @PathVariable String userId) {
+        JwtClaims claims = claims(authentication);
+        authService.supprimerUtilisateur(claims.getUserId(), userId);
+        return ResponseEntity.ok(Map.of("message", "Utilisateur supprime avec succes"));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Auth service is running");

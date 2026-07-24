@@ -191,6 +191,26 @@ public class AuthServiceImpl implements AuthService {
         log.info("Role modifie par admin={} pour userId={} : {} -> {}", requesterId, userId, oldRole, newRole);
     }
 
+    @Override
+    @Transactional
+    public void supprimerUtilisateur(String requesterId, String userId) {
+        AuthUser requester = authUserRepository.findById(requesterId)
+                .orElseThrow(() -> new AuthException("Administrateur introuvable"));
+
+        if (requester.getRole() != UserRole.ADMIN || !requester.isActif()) {
+            throw new AccessDeniedException("Seul un administrateur peut supprimer un utilisateur");
+        }
+        if (requesterId.equals(userId)) {
+            throw new AccessDeniedException("Vous ne pouvez pas supprimer votre propre compte");
+        }
+
+        AuthUser user = authUserRepository.findById(userId)
+                .orElseThrow(() -> new AuthException("Utilisateur introuvable"));
+
+        authUserRepository.delete(user);
+        log.info("Utilisateur supprime par admin={} : userId={}", requesterId, userId);
+    }
+
     @Transactional
     private TokenResponseDTO buildTokenResponse(AuthUser user) {
         String refreshToken = jwtService.generateRefreshToken(user.getId());

@@ -9,7 +9,7 @@ import SignIn from "layouts/authentification/sign-in";
 import SignUp from "layouts/authentification/sign-up";
 import ResetPassword from "layouts/authentification/reset-password";
 import LandingPage from "components/LandingPage";
-import { AjouterLogement, MesLogements, LogementDetail } from "layouts/logements";
+import { AjouterLogement, MesLogements, LogementDetail, ModifierLogement } from "layouts/logements";
 import { SiteAnnonces, SiteLogementDetail } from "layouts/site";
 import MesReservations from "layouts/mes-reservations";
 import AdminValidation from "layouts/admin-validation";
@@ -160,6 +160,13 @@ const routes = [
     route: "/ajouter-logement",
     key: "ajouter-logement",
     component: <AjouterLogement />,
+    roles: ["PROPRIETAIRE"],
+    hideInSidenav: true,
+  },
+  {
+    route: "/modifier-logement/:id",
+    key: "modifier-logement",
+    component: <ModifierLogement />,
     roles: ["PROPRIETAIRE"],
     hideInSidenav: true,
   },

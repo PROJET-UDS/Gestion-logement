@@ -81,23 +81,32 @@ function SiteLogementDetail() {
     if (getUserRole() !== "CLIENT") {
       setReservationStatut("error");
       setReservationMsg(
-        "Seul un compte client peut effectuer une réservation."
+        "Seul un compte client peut effectuer une réservation ou un achat."
       );
       return;
     }
 
-    if (!dateDebut || !dateFin) {
-      setReservationStatut("error");
-      setReservationMsg("Veuillez sélectionner les dates de début et de fin.");
-      return;
-    }
+    const isVente = logement.typeTransaction === "VENTE";
 
-    if (new Date(dateFin) <= new Date(dateDebut)) {
-      setReservationStatut("error");
-      setReservationMsg(
-        "La date de fin doit être postérieure à la date de début."
-      );
-      return;
+    if (!isVente) {
+      if (!dateDebut || !dateFin) {
+        setReservationStatut("error");
+        setReservationMsg("Veuillez sélectionner les dates de début et de fin.");
+        return;
+      }
+      if (new Date(dateFin) <= new Date(dateDebut)) {
+        setReservationStatut("error");
+        setReservationMsg(
+          "La date de fin doit être postérieure à la date de début."
+        );
+        return;
+      }
+    } else {
+      if (!dateDebut) {
+        setReservationStatut("error");
+        setReservationMsg("Veuillez sélectionner une date.");
+        return;
+      }
     }
 
     if (methodepayment !== "VISA" && !phoneNumber) {
@@ -108,13 +117,19 @@ function SiteLogementDetail() {
 
     setReservationLoading(true);
     try {
-      const reservation = await creerReservation({
+      const today = new Date().toISOString().split("T")[0];
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const reservationData = {
         logementId: logement.id,
-        dateDebut,
-        dateFin,
+        dateDebut: isVente ? today : dateDebut,
+        dateFin: isVente ? futureDate.toISOString().split("T")[0] : dateFin,
         methodepayment,
         phoneNumber: methodepayment !== "VISA" ? phoneNumber : undefined,
-      });
+      };
+
+      const reservation = await creerReservation(reservationData);
       let paymentCompleted = true;
       try {
         await payerReservation(reservation.id, methodepayment);
@@ -123,9 +138,13 @@ function SiteLogementDetail() {
       }
       setReservationStatut("success");
       setReservationMsg(
-        paymentCompleted
-          ? "Réservation créée et paiement enregistré."
-          : "Réservation créée. Le paiement reste à finaliser depuis votre espace."
+        isVente
+          ? (paymentCompleted
+            ? "Achat confirmé et acompte payé."
+            : "Achat créé. Le paiement reste à finaliser depuis votre espace.")
+          : (paymentCompleted
+            ? "Réservation créée et paiement enregistré."
+            : "Réservation créée. Le paiement reste à finaliser depuis votre espace.")
       );
       setTimeout(() => navigate("/mes-reservations", { replace: true }), 1800);
     } catch (err) {
@@ -589,6 +608,139 @@ function SiteLogementDetail() {
                             mt={2}
                           >
                             Connectez-vous pour réserver
+                          </MDTypography>
+                        )}
+                      </MDBox>
+                    )}
+
+                    {logement.typeTransaction === "VENTE" && (
+                      <MDBox ref={formRef}>
+                        <MDTypography variant="h6" fontWeight="medium" mb={1}>
+                          Acheter ce logement
+                        </MDTypography>
+                        <MDTypography variant="body2" color="text" mb={2}>
+                          Payez un acompte de 10% pour réserver ce bien. Le solde sera à régler lors de la remise des clés.
+                        </MDTypography>
+
+                        {reservationMsg && (
+                          <MDBox mb={2}>
+                            <MDAlert
+                              color={
+                                reservationStatut === "success"
+                                  ? "success"
+                                  : "error"
+                              }
+                              dismissible
+                              onClose={() => setReservationMsg(null)}
+                            >
+                              {reservationMsg}
+                            </MDAlert>
+                          </MDBox>
+                        )}
+
+                        <MDBox
+                          p={2}
+                          bgColor="grey-100"
+                          borderRadius="md"
+                          mb={2}
+                        >
+                          <MDBox display="flex" justifyContent="space-between" mb={1}>
+                            <MDTypography variant="body2" color="text">
+                              Prix du bien
+                            </MDTypography>
+                            <MDTypography variant="body2" fontWeight="bold">
+                              {Number(logement.prix).toLocaleString("fr-FR")} FCFA
+                            </MDTypography>
+                          </MDBox>
+                          <MDBox display="flex" justifyContent="space-between" mb={1}>
+                            <MDTypography variant="body2" color="text">
+                              Acompte requis (10%)
+                            </MDTypography>
+                            <MDTypography variant="body2" fontWeight="bold" color="warning">
+                              {Math.round(Number(logement.prix) * 0.1).toLocaleString("fr-FR")} FCFA
+                            </MDTypography>
+                          </MDBox>
+                          <MDBox display="flex" justifyContent="space-between">
+                            <MDTypography variant="body2" color="text">
+                              Solde restant
+                            </MDTypography>
+                            <MDTypography variant="body2" fontWeight="bold">
+                              {Math.round(Number(logement.prix) * 0.9).toLocaleString("fr-FR")} FCFA
+                            </MDTypography>
+                          </MDBox>
+                        </MDBox>
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Date souhaitée (optionnel)"
+                          type="date"
+                          value={dateDebut}
+                          onChange={(e) => { setDateDebut(e.target.value); setDateFin(e.target.value); }}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{
+                            min: new Date().toISOString().split("T")[0],
+                          }}
+                          sx={{ mb: 2 }}
+                        />
+
+                        <TextField
+                          select
+                          fullWidth
+                          size="small"
+                          label="Moyen de paiement"
+                          value={methodepayment}
+                          onChange={(e) => setMethodepayment(e.target.value)}
+                          sx={{ mb: 2 }}
+                        >
+                          <MenuItem value="VISA">Carte bancaire</MenuItem>
+                          <MenuItem value="ORANGE_MONEY">Orange Money</MenuItem>
+                          <MenuItem value="MTN_MOMO">MTN MoMo</MenuItem>
+                          <MenuItem value="WAVE">Wave</MenuItem>
+                        </TextField>
+
+                        {methodepayment !== "VISA" && (
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Numéro de téléphone"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="6XX XXX XXX"
+                            sx={{ mb: 2 }}
+                          />
+                        )}
+
+                        <MDButton
+                          variant="gradient"
+                          color="warning"
+                          fullWidth
+                          disabled={reservationLoading}
+                          onClick={() => {
+                            const today = new Date().toISOString().split("T")[0];
+                            const future = new Date();
+                            future.setFullYear(future.getFullYear() + 1);
+                            setDateDebut(dateDebut || today);
+                            setDateFin(dateFin || future.toISOString().split("T")[0]);
+                            setTimeout(() => handleReservation({ preventDefault: () => {} }), 100);
+                          }}
+                        >
+                          {reservationLoading ? (
+                            <CircularProgress size={20} color="inherit" />
+                          ) : (
+                            `Acheter - Acompte ${Math.round(Number(logement.prix) * 0.1).toLocaleString("fr-FR")} FCFA`
+                          )}
+                        </MDButton>
+
+                        {!isAuthenticated() && (
+                          <MDTypography
+                            variant="caption"
+                            color="text"
+                            textAlign="center"
+                            display="block"
+                            mt={2}
+                          >
+                            Connectez-vous pour acheter
                           </MDTypography>
                         )}
                       </MDBox>

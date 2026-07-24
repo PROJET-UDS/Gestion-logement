@@ -110,9 +110,9 @@ function Billing() {
                             <TableRow key={p.id}>
                               <TableCell>{p.id}</TableCell>
                               <TableCell>{p.reservationId || "-"}</TableCell>
-                              <TableCell>{p.montant}</TableCell>
-                              <TableCell>{p.devise || "EUR"}</TableCell>
-                              <TableCell>{p.moyenPaiement || p.moyenpayment || "-"}</TableCell>
+                              <TableCell>{p.amount}</TableCell>
+                              <TableCell>{p.currency || "EUR"}</TableCell>
+                              <TableCell>{p.provider || "-"}</TableCell>
                               <TableCell>
                                 <MDTypography
                                   variant="caption"

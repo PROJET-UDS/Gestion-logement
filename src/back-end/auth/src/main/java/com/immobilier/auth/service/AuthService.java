@@ -12,4 +12,5 @@ public interface AuthService {
     void             logout(RefreshRequestDTO request);
     void             changePassword(String userId, String oldPassword, String newPassword);
     void             changeUserRole(String requesterId, String userId, UserRole newRole);
+    void             supprimerUtilisateur(String requesterId, String userId);
 }

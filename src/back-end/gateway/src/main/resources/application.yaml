@@ -10,7 +10,8 @@ spring:
         cors-configurations:
           '[/**]':
             allowedOriginPatterns:
-              - "https://6126kvl0-3000.use2.devtunnels.ms"
+              - "https://vzzg205m-3000.use.devtunnels.ms"
+              - "https://vzzg205m-3000.use.devtunnels.ms"
               - "http://localhost:3000"
               - "http://localhost:3001"
               - "*"

@@ -84,3 +84,27 @@ export function getFileUrl(fileUrl) {
   if (fileUrl.startsWith("http")) return fileUrl;
   return `${API_BASE_URL}${fileUrl}`;
 }
+
+export async function modifierLogement(id, data) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/logements/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors de la modification du logement");
+  }
+  return response.json();
+}
+
+export async function supprimerLogement(id) {
+  const response = await fetch(`${API_BASE_URL}/api/v1/logements/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeaders() },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Erreur lors de la suppression du logement");
+  }
+}

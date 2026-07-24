@@ -18,12 +18,15 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
   const [dateDebut, setDateDebut] = useState("");
   const [dateFin, setDateFin] = useState("");
   const [methodepayment, setMethodepayment] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [montantReservation, setMontantReservation] = useState(0);
   const [montantRestant, setMontantRestant] = useState(0);
   const [step, setStep] = useState("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [reservationId, setReservationId] = useState(null);
+
+  const isVente = logement?.typeTransaction === "VENTE";
 
   const userId = getUserId();
 
@@ -36,16 +39,27 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
   }, [logement]);
 
   const handleCreerReservation = async () => {
-    if (!dateDebut || !dateFin) {
-      setError("Veuillez sélectionner les dates de réservation");
-      return;
-    }
-    if (new Date(dateFin) <= new Date(dateDebut)) {
-      setError("La date de fin doit être après la date de début");
-      return;
+    if (isVente) {
+      if (!dateDebut) {
+        setError("Veuillez sélectionner une date");
+        return;
+      }
+    } else {
+      if (!dateDebut || !dateFin) {
+        setError("Veuillez sélectionner les dates de réservation");
+        return;
+      }
+      if (new Date(dateFin) <= new Date(dateDebut)) {
+        setError("La date de fin doit être après la date de début");
+        return;
+      }
     }
     if (!methodepayment) {
       setError("Veuillez choisir une méthode de payment");
+      return;
+    }
+    if (methodepayment !== "VISA" && !phoneNumber) {
+      setError("Veuillez entrer votre numéro de téléphone");
       return;
     }
 
@@ -53,12 +67,16 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
     setError("");
 
     try {
-      const reservation = await creerReservation({
+      const today = new Date().toISOString().split("T")[0];
+      const reservationData = {
         logementId: logement.id,
-        dateDebut,
-        dateFin,
+        dateDebut: isVente ? today : dateDebut,
+        dateFin: isVente ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] : dateFin,
         methodepayment,
-      });
+        phoneNumber: methodepayment !== "VISA" ? phoneNumber : undefined,
+      };
+
+      const reservation = await creerReservation(reservationData);
 
       setReservationId(reservation.id);
       setStep("payment");
@@ -93,9 +111,9 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
         <div style={styles.modal}>
           <div style={styles.successContainer}>
             <div style={styles.successIcon}>✓</div>
-            <h2 style={styles.successTitle}>Réservation Confirmée !</h2>
+            <h2 style={styles.successTitle}>{isVente ? "Achat Confirmé !" : "Réservation Confirmée !"}</h2>
             <p style={styles.successText}>
-              Votre réservation pour <strong>{logement.titre}</strong> a été confirmée.
+              {isVente ? "Votre achat pour" : "Votre réservation pour"} <strong>{logement.titre}</strong> a été confirmée.
             </p>
             <div style={styles.successDetails}>
               <div style={styles.detailRow}>
@@ -106,13 +124,15 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
                 <span style={styles.detailLabel}>Montant restant :</span>
                 <span style={styles.detailValue}>{formatMontant(montantRestant)} FCFA</span>
               </div>
-              <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Période :</span>
-                <span style={styles.detailValue}>{dateDebut} → {dateFin}</span>
-              </div>
+              {!isVente && (
+                <div style={styles.detailRow}>
+                  <span style={styles.detailLabel}>Période :</span>
+                  <span style={styles.detailValue}>{dateDebut} → {dateFin}</span>
+                </div>
+              )}
             </div>
             <p style={styles.successNote}>
-              Le logement est maintenant marqué comme réservé. Vous pouvez payer le reste du montant à tout moment.
+              Le logement est maintenant marqué comme {isVente ? "vendu" : "réservé"}. Vous pouvez payer le reste du montant à tout moment.
             </p>
             <button onClick={onClose} style={styles.btnPrimary}>
               Fermer
@@ -187,7 +207,7 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
     <div style={styles.overlay}>
       <div style={styles.modal}>
         <div style={styles.header}>
-          <h2 style={styles.title}>Réserver ce Logement</h2>
+          <h2 style={styles.title}>{isVente ? "Acheter ce Logement" : "Réserver ce Logement"}</h2>
           <button onClick={onClose} style={styles.closeBtn}>✕</button>
         </div>
 
@@ -209,28 +229,38 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
           </div>
         </div>
 
-        <div style={styles.formSection}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Date de début</label>
-            <input
-              type="date"
-              value={dateDebut}
-              min={today}
-              onChange={(e) => setDateDebut(e.target.value)}
-              style={styles.input}
-            />
+        {!isVente && (
+          <div style={styles.formSection}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Date de début</label>
+              <input
+                type="date"
+                value={dateDebut}
+                min={today}
+                onChange={(e) => setDateDebut(e.target.value)}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Date de fin</label>
+              <input
+                type="date"
+                value={dateFin}
+                min={dateDebut || today}
+                onChange={(e) => setDateFin(e.target.value)}
+                style={styles.input}
+              />
+            </div>
           </div>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Date de fin</label>
-            <input
-              type="date"
-              value={dateFin}
-              min={dateDebut || today}
-              onChange={(e) => setDateFin(e.target.value)}
-              style={styles.input}
-            />
+        )}
+
+        {isVente && (
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: "#FFF7ED", borderRadius: 8, border: "1px solid #FED7AA" }}>
+            <p style={{ margin: 0, fontSize: 14, color: "#9A3412" }}>
+              En achetant ce bien, vous vous engagez à verser un acompte de 10% ({formatMontant(montantReservation)} FCFA). Le solde de {formatMontant(montantRestant)} FCFA sera à régler lors de la remise des clés.
+            </p>
           </div>
-        </div>
+        )}
 
         <div style={styles.prixRecap}>
           <div style={styles.prixRow}>
@@ -242,7 +272,7 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
             <span style={{...styles.prixBold, color: "#E67E22"}}>{formatMontant(montantReservation)} FCFA</span>
           </div>
           <div style={{...styles.prixRow, borderTop: "2px solid #E5E7EB", paddingTop: 8}}>
-            <span>Reste à payer après visite</span>
+            <span>{isVente ? "Solde restant" : "Reste à payer après visite"}</span>
             <span style={styles.prixBold}>{formatMontant(montantRestant)} FCFA</span>
           </div>
         </div>
@@ -267,17 +297,30 @@ export default function ReservationForm({ logement, onSuccess, onClose }) {
           </div>
         </div>
 
+        {methodepayment && methodepayment !== "VISA" && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={styles.label}>Numéro de téléphone</label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="6XX XXX XXX"
+              style={styles.input}
+            />
+          </div>
+        )}
+
         {error && <div style={styles.error}>{error}</div>}
 
         <button
           onClick={handleCreerReservation}
-          disabled={loading || !dateDebut || !dateFin || !methodepayment}
+          disabled={loading || !dateDebut || !methodepayment || (methodepayment !== "VISA" && !phoneNumber)}
           style={{
             ...styles.btnPrimary,
-            opacity: loading || !dateDebut || !dateFin || !methodepayment ? 0.5 : 1,
+            opacity: loading || !dateDebut || !methodepayment || (methodepayment !== "VISA" && !phoneNumber) ? 0.5 : 1,
           }}
         >
-          {loading ? "Réservation en cours..." : `Réserver pour ${formatMontant(montantReservation)} FCFA`}
+          {loading ? (isVente ? "Achat en cours..." : "Réservation en cours...") : (isVente ? `Acheter - ${formatMontant(montantReservation)} FCFA` : `Réserver pour ${formatMontant(montantReservation)} FCFA`)}
         </button>
       </div>
     </div>

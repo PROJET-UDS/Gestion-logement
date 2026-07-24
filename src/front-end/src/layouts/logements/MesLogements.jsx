@@ -5,6 +5,10 @@ import Card from "@mui/material/Card";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import Icon from "@mui/material/Icon";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -15,7 +19,7 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
-import { getMesLogements, getFileUrl } from "api/logementApi";
+import { getMesLogements, getFileUrl, supprimerLogement } from "api/logementApi";
 import { useNavigate } from "react-router-dom";
 
 const STATUT_COLORS = {
@@ -30,6 +34,9 @@ function MesLogements() {
   const [logements, setLogements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [logementASupprimer, setLogementASupprimer] = useState(null);
+  const [suppressionLoading, setSuppressionLoading] = useState(false);
 
   useEffect(() => {
     getMesLogements()
@@ -37,6 +44,21 @@ function MesLogements() {
       .catch((err) => setErreur(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleSupprimer = async () => {
+    if (!logementASupprimer) return;
+    setSuppressionLoading(true);
+    try {
+      await supprimerLogement(logementASupprimer.id);
+      setLogements((prev) => prev.filter((l) => l.id !== logementASupprimer.id));
+      setDeleteDialogOpen(false);
+      setLogementASupprimer(null);
+    } catch (err) {
+      setErreur(err.message || "Erreur lors de la suppression");
+    } finally {
+      setSuppressionLoading(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -82,11 +104,8 @@ function MesLogements() {
               <Grid container spacing={3}>
                 {logements.map((logement) => (
                   <Grid item xs={12} sm={6} key={logement.id}>
-                    <Card
-                      sx={{ cursor: "pointer", "&:hover": { boxShadow: 6 } }}
-                      onClick={() => navigate(`/logements/${logement.id}`)}
-                    >
-                      <MDBox p={2}>
+                    <Card sx={{ "&:hover": { boxShadow: 6 } }}>
+                      <MDBox p={2} sx={{ cursor: "pointer" }} onClick={() => navigate(`/logements/${logement.id}`)}>
                         {logement.medias && logement.medias.length > 0 ? (
                           <MDBox mb={1}>
                             <img
@@ -132,6 +151,27 @@ function MesLogements() {
                           )}
                         </MDBox>
                       </MDBox>
+
+                      <MDBox display="flex" justifyContent="flex-end" gap={1} px={2} pb={2}>
+                        <MDButton
+                          variant="outlined"
+                          color="info"
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/modifier-logement/${logement.id}`); }}
+                        >
+                          <Icon sx={{ fontSize: 16, mr: 0.5 }}>edit</Icon>
+                          Modifier
+                        </MDButton>
+                        <MDButton
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); setLogementASupprimer(logement); setDeleteDialogOpen(true); }}
+                        >
+                          <Icon sx={{ fontSize: 16, mr: 0.5 }}>delete</Icon>
+                          Supprimer
+                        </MDButton>
+                      </MDBox>
                     </Card>
                   </Grid>
                 ))}
@@ -141,6 +181,23 @@ function MesLogements() {
         </Grid>
       </MDBox>
       <Footer />
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <MDTypography variant="body2">
+            Voulez-vous vraiment supprimer le logement <strong>{logementASupprimer?.titre}</strong> ? Cette action est irreversible.
+          </MDTypography>
+        </DialogContent>
+        <DialogActions>
+          <MDButton onClick={() => setDeleteDialogOpen(false)} color="secondary">
+            Annuler
+          </MDButton>
+          <MDButton onClick={handleSupprimer} color="error" disabled={suppressionLoading}>
+            {suppressionLoading ? <CircularProgress size={20} /> : "Supprimer"}
+          </MDButton>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 }

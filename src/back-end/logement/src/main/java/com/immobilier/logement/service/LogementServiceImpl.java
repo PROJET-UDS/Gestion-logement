@@ -325,4 +325,50 @@ public class LogementServiceImpl implements LogementService {
                 .map(logementMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public LogementResponseDTO modifierLogement(Long id, LogementRequestDTO requestDTO, String proprietaireId) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (!logement.getProprietaireId().equals(proprietaireId)) {
+            throw new IllegalStateException("Seul le propriétaire peut modifier ce logement");
+        }
+
+        logement.setTitre(requestDTO.getTitre());
+        logement.setDescription(requestDTO.getDescription());
+        logement.setPrix(requestDTO.getPrix());
+        logement.setAdresse(requestDTO.getAdresse());
+        logement.setVille(requestDTO.getVille());
+        logement.setQuartier(requestDTO.getQuartier());
+        logement.setTypeLogement(requestDTO.getTypeLogement());
+        logement.setTypeTransaction(requestDTO.getTypeTransaction());
+        logement.setCharges(requestDTO.getCharges());
+        logement.setNbPieces(requestDTO.getNbPieces());
+        logement.setSuperficie(requestDTO.getSuperficie());
+        logement.setEquipements(requestDTO.getEquipements());
+        logement.setLatitude(requestDTO.getLatitude());
+        logement.setLongitude(requestDTO.getLongitude());
+
+        Logement sauvegarde = logementRepository.save(logement);
+        log.info("Logement {} modifié par {}", id, proprietaireId);
+        return logementMapper.toResponseDTO(sauvegarde);
+    }
+
+    @Override
+    @Transactional
+    public void supprimerLogement(Long id, String proprietaireId) {
+        Logement logement = logementRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Logement introuvable avec l'id : " + id));
+
+        if (!logement.getProprietaireId().equals(proprietaireId)) {
+            throw new IllegalStateException("Seul le propriétaire peut supprimer ce logement");
+        }
+
+        logement.setSupprime(true);
+        logement.setDateSuppression(java.time.LocalDateTime.now());
+        logementRepository.save(logement);
+        log.info("Logement {} supprimé (soft delete) par {}", id, proprietaireId);
+    }
 }

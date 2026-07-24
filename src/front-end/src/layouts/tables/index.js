@@ -6,6 +6,11 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import CircularProgress from "@mui/material/CircularProgress";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
@@ -22,26 +27,55 @@ function Tables() {
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [recherche, setRecherche] = useState("");
   const [message, setMessage] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userASupprimer, setUserASupprimer] = useState(null);
+  const [suppressionLoading, setSuppressionLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/users`, {
-          headers: authHeaders(),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setUtilisateurs(data);
-        } else {
-          setMessage("Impossible de charger la liste des utilisateurs");
-        }
-      } catch (err) {
-        setMessage("Erreur de connexion au serveur");
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        headers: authHeaders(),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUtilisateurs(data);
+      } else {
+        setMessage("Impossible de charger la liste des utilisateurs");
       }
-    };
+    } catch (err) {
+      setMessage("Erreur de connexion au serveur");
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleSupprimer = async () => {
+    if (!userASupprimer) return;
+    setSuppressionLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/users/${encodeURIComponent(userASupprimer.id)}`,
+        {
+          method: "DELETE",
+          headers: authHeaders(),
+        }
+      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.message || "Erreur lors de la suppression");
+      }
+      setUtilisateurs((prev) => prev.filter((u) => u.id !== userASupprimer.id));
+      setDeleteDialogOpen(false);
+      setUserASupprimer(null);
+    } catch (err) {
+      setMessage(err.message || "Erreur lors de la suppression");
+    } finally {
+      setSuppressionLoading(false);
+    }
+  };
 
   // Filtrer les utilisateurs selon la recherche (nom ou email)
   const utilisateursFiltres = utilisateurs.filter((user) => {
@@ -140,6 +174,13 @@ function Tables() {
                         >
                           Gérer le rôle
                         </MDButton>
+                        <MDButton
+                          variant="text"
+                          color="error"
+                          onClick={() => { setUserASupprimer(user); setDeleteDialogOpen(true); }}
+                        >
+                          Supprimer
+                        </MDButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -150,6 +191,23 @@ function Tables() {
         </Card>
       </MDBox>
       <Footer />
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirmer la suppression</DialogTitle>
+        <DialogContent>
+          <MDTypography variant="body2">
+            Voulez-vous vraiment supprimer l&apos;utilisateur <strong>{userASupprimer?.nomComplet || userASupprimer?.email}</strong> ? Cette action est irreversible.
+          </MDTypography>
+        </DialogContent>
+        <DialogActions>
+          <MDButton onClick={() => setDeleteDialogOpen(false)} color="secondary">
+            Annuler
+          </MDButton>
+          <MDButton onClick={handleSupprimer} color="error" disabled={suppressionLoading}>
+            {suppressionLoading ? <CircularProgress size={20} /> : "Supprimer"}
+          </MDButton>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 }

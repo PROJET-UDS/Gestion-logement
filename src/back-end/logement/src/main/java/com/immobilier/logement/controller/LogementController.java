@@ -123,4 +123,20 @@ public class LogementController {
     public ResponseEntity<List<LogementResponseDTO>> logementsPublies() {
         return ResponseEntity.ok(logementService.obtenirLogementsPublies());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LogementResponseDTO> modifierLogement(
+            @PathVariable Long id,
+            @Valid @RequestBody LogementRequestDTO requestDTO,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(logementService.modifierLogement(id, requestDTO, user.userId()));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> supprimerLogement(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        logementService.supprimerLogement(id, user.userId());
+        return ResponseEntity.noContent().build();
+    }
 }

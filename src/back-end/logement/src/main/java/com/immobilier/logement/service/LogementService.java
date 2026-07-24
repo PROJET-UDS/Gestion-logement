@@ -42,4 +42,8 @@ public interface LogementService {
     List<LogementResponseDTO> obtenirLogementsEnAttenteValidation();
 
     List<LogementResponseDTO> obtenirLogementsPublies();
+
+    LogementResponseDTO modifierLogement(Long id, LogementRequestDTO requestDTO, String proprietaireId);
+
+    void supprimerLogement(Long id, String proprietaireId);
 }
